@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import Spider from "./spider.js";
 
 const noise = new SimplexNoise();
 
@@ -106,6 +107,10 @@ export default class ThreeManager {
 
         spotLight.lookAt(this.ball);
 
+        // SPIDER
+        this.spider = new Spider();
+        this.spider.addToScene(this.scene);
+
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
     }
@@ -122,7 +127,6 @@ export default class ThreeManager {
         this.cube.rotation.y += 0.01;
 
         if(this.shovel != null) {
-            console.log(this.pauseCounter);
             this.shovel.rotation.y += 0.01;
             if(!this.paused) {
                 this.pcnt += 0.01;
@@ -150,6 +154,9 @@ export default class ThreeManager {
         // Rotate the ball
         this.ball.rotation.x += 0.01;
         this.ball.rotation.y += 0.01;
+
+        // tick the spider
+        this.spider.tick();
 
 
         this.makeRoughGround(this.plane2, 1);
