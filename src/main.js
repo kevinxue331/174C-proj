@@ -8,3 +8,6 @@ export default class Main {
         this._threeMng.start();
     }
 }
+
+const main = new Main();
+
