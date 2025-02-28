@@ -49,8 +49,9 @@ export default class ThreeManager {
         this.plane2.position.set(0, -45, 0);
 
         // add objects to scene
-        this.scene.add(this.plane);
-        this.scene.add(this.plane2);
+        //this.scene.add(this.plane);
+        //this.scene.add(this.plane2);
+        this.scene.add(this.ball);
 
         // light
         const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
@@ -79,7 +80,7 @@ export default class ThreeManager {
                 // const geometry = object.children[0].geometry;
                 const objGeometries = [];
                 for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.gipush(object.children[i].geometry);
+                    objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
                 geometry.scale(0.075,0.075,0.075)
