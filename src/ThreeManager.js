@@ -52,7 +52,7 @@ export default class ThreeManager {
         // add objects to scene
         //this.scene.add(this.plane);
         //this.scene.add(this.plane2);
-        this.scene.add(this.ball);
+        // this.scene.add(this.ball);
 
         // light
         const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
@@ -89,7 +89,7 @@ export default class ThreeManager {
                 this.shovel = mesh;
                 this.geoList.push(geometry.clone());
                 this.shovel.position.set(0, -5, 15);
-                this.scene.add(this.shovel);
+                // this.scene.add(this.shovel);
             }
         );
         objLoader.load(

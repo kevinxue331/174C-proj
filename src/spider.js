@@ -20,7 +20,7 @@ export default class Spider {
 
     onKeyDown(event) {
         if (event.code === 'Space') {
-            this.leg.Pg = math.add(this.leg.Pg, [-1,0,0]);
+            // this.leg.Pg = math.add(this.leg.Pg, [-1,0,0]);
             this.leg.apply_theta();
         }
         if (event.code === 'KeyA') {
@@ -157,52 +157,49 @@ class Leg {
     // mapping from global theta to each joint theta
     apply_theta() {
         // TODO: Implement your theta mapping here
-        if(this.end_effector == null) return;
-        this.E = math.subtract(this.Pg, this.end_effector);
-
         this.goal.position.x = this.Pg[0];
         this.goal.position.y = this.Pg[1];
         this.goal.position.z = this.Pg[2];
 
-        if(math.norm(this.E) <= 0.1) return;
+        if (this.end_effector == null) return;
+
+        this.E = math.subtract(this.Pg, this.end_effector);
+        if (math.norm(this.E) <= 0.1) return;
 
         let iterations = 0;
-        while(math.norm(this.E) > 0.1 && iterations < 100) {
+        let prev_error = Infinity;
+        const max_iterations = 20;
+        const min_error_change = 0.001;
+
+        while (math.norm(this.E) > 0.1 && iterations < max_iterations) {
+            prev_error = math.norm(this.E);
             iterations++;
-            let Pg = this.Pg;
-            let P = this.end_effector;
-            this.E = math.subtract(Pg, P);
-            const k = 0.05;
-            let dx = math.multiply(k, this.E);
+
+            const k = 0.5; // Adaptive step size
+            const dx = math.multiply(k, this.E);
 
             this.Jacobian = this.calculate_Jacobian();
-            let d_theta = this.calculate_delta_theta(this.Jacobian, dx);
-            // let scale = Math.max(0.5, math.norm(this.E)/50);
-            this.theta = math.add(this.theta, math.multiply(d_theta, 0.25));
-            console.log("dtheta:" + d_theta)
+            const d_theta = this.calculate_delta_theta(this.Jacobian, dx);
 
+            this.theta = math.add(this.theta, d_theta); // Update joint angles
+
+            // Apply joint limits (if any)
+            // this.theta = math.max(min_limits, math.min(max_limits, this.theta));
+
+            // Update joint positions
             let applied_dofs = 0;
-            for(let i=0; i<this.arcs.length; i++){
-                let rx = 0;
-                let ry = 0;
-                let rz = 0;
-                if(this.arcs[i].dof.Rx) {
-                    rx = this.theta[applied_dofs];
-                    applied_dofs++;
-                }
-                if(this.arcs[i].dof.Ry) {
-                    ry = this.theta[applied_dofs];
-                    applied_dofs++;
-                }
-                if(this.arcs[i].dof.Rz) {
-                    rz = this.theta[applied_dofs];
-                    applied_dofs++;
-                }
+            for (let i = 0; i < this.arcs.length; i++) {
+                let rx = 0, ry = 0, rz = 0;
+                if (this.arcs[i].dof.Rx) rx = this.theta[applied_dofs++];
+                if (this.arcs[i].dof.Ry) ry = this.theta[applied_dofs++];
+                if (this.arcs[i].dof.Rz) rz = this.theta[applied_dofs++];
                 this.arcs[i].update_articulation([rx, ry, rz]);
             }
-            this.update()
-            console.log(this.end_effector);
+
+            this.update(); // Update end-effector position
+            this.E = math.subtract(this.Pg, this.end_effector);
         }
+        console.log("iterations: " + iterations);
 
     }
 
@@ -268,10 +265,11 @@ class Leg {
     }
 
     calculate_delta_theta(J, dx) {
-        // underconstrained jacobian pseudoinverse
-        // return math.multiply(math.multiply(math.transpose(J), math.inv(math.multiply(J, math.transpose(J)))), dx);
-
-        return math.multiply(math.transpose(J), dx);
+        const J_T = math.transpose(J);
+        const J_JT = math.multiply(J, J_T);
+        const inv_J_JT = math.inv(J_JT);
+        const J_pseudo = math.multiply(J_T, inv_J_JT);
+        return math.multiply(J_pseudo, dx);
     }
 
 }
