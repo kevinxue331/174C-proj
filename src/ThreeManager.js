@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
 
 const noise = new SimplexNoise();
@@ -38,8 +39,17 @@ export default class ThreeManager {
         const planeMaterial = new THREE.MeshLambertMaterial({
             color: 0x6904ce,
             side: THREE.DoubleSide,
-            wireframe: true
+            wireframe: false
         });
+
+        let textureLoader = new THREE.TextureLoader()
+        const tex1 = textureLoader.load('/static/tex/building_glass_tex.jpg');
+        const tex2 = textureLoader.load('/static/tex/building_tex_2.jpg');
+        const textureMaterial1 = new THREE.MeshBasicMaterial({ map: tex1 });
+        const textureMaterial2 = new THREE.MeshBasicMaterial({ map: tex2 });
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        this.cube = new THREE.Mesh(geo, textureMaterial1)
+        this.scene.add(this.cube)
 
         this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
         this.plane.rotation.x = -0.5 * Math.PI;
@@ -51,7 +61,7 @@ export default class ThreeManager {
 
         // add objects to scene
         //this.scene.add(this.plane);
-        //this.scene.add(this.plane2);
+        this.scene.add(this.plane2);
         // this.scene.add(this.ball);
 
         // light
@@ -68,6 +78,17 @@ export default class ThreeManager {
 
         // Camera position
         this.camera.position.z = 30;
+        /*
+        forward back left right (translate): WASD
+        up down: R, F
+        pitch, yaw (look up/down, look left/right): direction arrows
+         */
+        this.controls = new FlyControls( this.camera, this.renderer.domElement );
+        this.controls.movementSpeed = 100;
+        this.controls.rollSpeed = Math.PI / 16;
+        this.controls.autoForward = false;
+        this.controls.dragToLook = true;
+
 
         // OBJ
         // OBJS
@@ -108,12 +129,36 @@ export default class ThreeManager {
         objLoader.load(
             '/static/obj/building_elliptical.obj',
             (object) => {
-                this.scene.add(object);
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.scale(0.4,0.4,0.4);
+                const mesh = new THREE.Mesh(geometry, textureMaterial1)
+                this.building = mesh;
+                this.scene.add(this.building);
+
+            }
+        );
+        objLoader.load(
+            '/static/obj/building_bent.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.scale(0.4,0.4,0.4);
+                const mesh = new THREE.Mesh(geometry, textureMaterial2)
+                this.building2 = mesh;
+                this.scene.add(this.building2);
             }
         );
 
-        spotLight.lookAt(this.ball);
 
+        spotLight.lookAt(this.ball);
+        //this.building1.position.set(0.5, -30, 0.5)
         // SPIDER
         this.spider = new Spider();
         this.spider.addToScene(this.scene);
@@ -168,6 +213,7 @@ export default class ThreeManager {
 
         this.makeRoughGround(this.plane2, 1);
 
+        this.controls.update(0.02)
         this.renderer.render(this.scene, this.camera);
     }
 
