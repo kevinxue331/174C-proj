@@ -89,7 +89,7 @@ export default class ThreeManager {
                 this.shovel = mesh;
                 this.geoList.push(geometry.clone());
                 this.shovel.position.set(0, -5, 15);
-                // this.scene.add(this.shovel);
+                //this.scene.add(this.shovel);
             }
         );
         objLoader.load(
@@ -103,6 +103,12 @@ export default class ThreeManager {
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
                 geometry.scale(5.75,5.75,5.75);
                 this.geoList.push(geometry.clone());
+            }
+        );
+        objLoader.load(
+            '/static/obj/building_elliptical.obj',
+            (object) => {
+                this.scene.add(object);
             }
         );
 
