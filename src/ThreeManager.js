@@ -12,6 +12,8 @@ export default class ThreeManager {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
         document.body.appendChild(this.renderer.domElement);
 
         this.cube = null;
@@ -42,32 +44,53 @@ export default class ThreeManager {
             wireframe: false
         });
 
+        //direction light
+
+        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 1000 );
+        this.directionalLight.castShadow = true;
+        this.directionalLight.position.set(0, 100, 1);
+
+        this.directionalLight.shadow.mapSize.width = 1512; // default
+        this.directionalLight.shadow.mapSize.height = 1512; // default
+        this.directionalLight.shadow.camera.near = 0.5; // default
+        this.directionalLight.shadow.camera.far = 5000; // default
+        this.scene.add( this.directionalLight );
+
+
         let textureLoader = new THREE.TextureLoader()
         const tex1 = textureLoader.load('/static/tex/building_glass_tex.jpg');
-        const tex2 = textureLoader.load('/static/tex/building_tex_2.jpg');
+        const tex2 = textureLoader.load('/static/tex/building_tex_2.png');
+        const tex3 = textureLoader.load('/static/tex/building_tex_1.jpg');
         const textureMaterial1 = new THREE.MeshBasicMaterial({ map: tex1 });
         const textureMaterial2 = new THREE.MeshBasicMaterial({ map: tex2 });
+        const textureMaterial3 = new THREE.MeshBasicMaterial({ map: tex3 });
         const geo = new THREE.BoxGeometry(1, 1, 1);
-        this.cube = new THREE.Mesh(geo, textureMaterial1)
+        this.cube = new THREE.Mesh(geo, textureMaterial2)
         this.scene.add(this.cube)
 
-        this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        this.plane = new THREE.Mesh(planeGeometry, textureMaterial3);
         this.plane.rotation.x = -0.5 * Math.PI;
-        this.plane.position.set(0, 45, 0);
+        this.plane.position.set(0, 0, 0);
+        this.plane.castShadow = true;
+        this.plane.receiveShadow = true;
 
-        this.plane2 = new THREE.Mesh(planeGeometry, planeMaterial);
+
+        this.plane2 = new THREE.Mesh(planeGeometry, textureMaterial2);
         this.plane2.rotation.x = -0.5 * Math.PI;
         this.plane2.position.set(0, -45, 0);
 
+
         // add objects to scene
         //this.scene.add(this.plane);
-        this.scene.add(this.plane2);
+        this.scene.add(this.plane);
         // this.scene.add(this.ball);
 
         // light
-        const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
-        this.scene.add(ambientLight);
+        //const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
+        //this.scene.add(ambientLight);
+        //ambientLight.castShadow = true;
 
+        /*
         const spotLight = new THREE.SpotLight(0xffffff);
         spotLight.intensity = 10000;
         spotLight.position.set(-50, 0, 20);
@@ -75,9 +98,12 @@ export default class ThreeManager {
         spotLight.castShadow = true;
         this.scene.add(spotLight);
 
+         */
+
 
         // Camera position
         this.camera.position.z = 30;
+        this.camera.position.y = 10;
         /*
         forward back left right (translate): WASD
         up down: R, F
@@ -137,6 +163,8 @@ export default class ThreeManager {
                 geometry.scale(0.4,0.4,0.4);
                 const mesh = new THREE.Mesh(geometry, textureMaterial1)
                 this.building = mesh;
+                this.building.castShadow = true;
+                this.building.receiveShadow = true;
                 this.scene.add(this.building);
 
             }
@@ -149,15 +177,35 @@ export default class ThreeManager {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(30, 0, 5)
+                geometry.scale(0.4,0.4,0.4);
+                const mesh = new THREE.Mesh(geometry, textureMaterial3)
+                this.building2 = mesh;
+                this.building2.castShadow = true;
+                this.building2.receiveShadow = true;
+                this.scene.add(this.building2);
+            }
+        );
+        objLoader.load(
+            '/static/obj/building_square_1.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(30, 0, 35)
                 geometry.scale(0.4,0.4,0.4);
                 const mesh = new THREE.Mesh(geometry, textureMaterial2)
-                this.building2 = mesh;
-                this.scene.add(this.building2);
+                this.building3 = mesh;
+                this.building3.castShadow = true;
+                this.building3.receiveShadow = true;
+                this.scene.add(this.building3);
             }
         );
 
 
-        spotLight.lookAt(this.ball);
+        //spotLight.lookAt(this.ball);
         //this.building1.position.set(0.5, -30, 0.5)
         // SPIDER
         this.spider = new Spider();
@@ -211,7 +259,7 @@ export default class ThreeManager {
         this.spider.tick();
 
 
-        this.makeRoughGround(this.plane2, 1);
+        //this.makeRoughGround(this.plane2, 1);
 
         this.controls.update(0.02)
         this.renderer.render(this.scene, this.camera);
