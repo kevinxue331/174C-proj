@@ -10,6 +10,7 @@ export default class Spider {
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         this.cube = new THREE.Mesh(geometry, material);
         this.leg = new Leg()
+        this.bodyTheta = 0;
         window.addEventListener('keydown', this.onKeyDown.bind(this));
     }
 
@@ -39,6 +40,11 @@ export default class Spider {
             this.leg.Pg = math.add(this.leg.Pg, [0,-0.1,0]);
             // this.leg.apply_theta();
         }
+        if (event.code === 'KeyR') {
+            this.bodyTheta+=0.0174533;
+            this.leg.root.articulation_matrix = matrixhelper.rotationZ(this.bodyTheta)
+            this.leg.update();
+        }
     }
 
     tick() {
@@ -52,22 +58,26 @@ export default class Spider {
 
 class Leg {
     constructor() {
-        this.nodes = [];
-        this.root = new Arc("arc", null, null, math.identity(4));
-        this.root.set_dof(true,true,true);
-        this.arcs = [this.root];
+        const geometry = new THREE.BoxGeometry(2.5,2.5,2.5);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.body = new Node("body", new THREE.Mesh(geometry, material), math.identity(4));
+        this.shoulder = new Arc("arc", this.body, null, matrixhelper.translationMatrix(1.25,0,0));
+        this.shoulder.set_dof(true,true,true);
+        this.body.children_arcs.push(this.shoulder);
+        this.root = new Arc("root", null, this.body, math.identity(4));
+        this.root.set_dof(false,false,false);
+        this.nodes = [this.body];
+        this.arcs = [this.root, this.shoulder];
     }
 
     addNode(length, shape) {
         // right upper arm node
         let node_transform = matrixhelper.scalingMatrix(length, 0.2, 0.2);
         node_transform = math.multiply(matrixhelper.translationMatrix(length/2, 0, 0), node_transform);
-        // console.log("node transform: " + node_transform);
         let node = new Node("node", shape, node_transform);
         this.arcs[this.arcs.length-1].child_node = node;
         this.nodes.push(node);
 
-        console.log("placing arc at " + length);
         let arc_location = matrixhelper.translationMatrix(length, 0, 0)
 
         let arc = new Arc("arc", node, null, arc_location);
@@ -107,7 +117,6 @@ class Leg {
         this.Pg = [12, 0, 0];
 
         this.update()
-        console.log(this.end_effector)
     }
 
     update() {
@@ -138,11 +147,9 @@ class Leg {
             node.shape.scale.y = decomp.scale.y;
             node.shape.scale.z = decomp.scale.z;
             node.shape.setRotationFromQuaternion(decomp.rotation);
-            // console.log("setting transform of " + new THREE.Vector3().setFromMatrixPosition(threeMatrix).toArray());
             if(arc.end_effector) {
                 let lp = arc.end_effector.local_position;
                 let ef_matrix = matrix;
-                // arc.end_effector.global_position = [ef_matrix[0][3], ef_matrix[1][3], ef_matrix[2][3]];
             }
 
             matrix = this.matrix_stack.pop();
@@ -190,6 +197,8 @@ class Leg {
             let applied_dofs = 0;
             for (let i = 0; i < this.arcs.length; i++) {
                 let rx = 0, ry = 0, rz = 0;
+                let hasDOFs = this.arcs[i].dof.Rx || this.arcs[i].dof.Ry || this.arcs[i].dof.Rz;
+                if(!hasDOFs) break;
                 if (this.arcs[i].dof.Rx) rx = this.theta[applied_dofs++];
                 if (this.arcs[i].dof.Ry) ry = this.theta[applied_dofs++];
                 if (this.arcs[i].dof.Rz) rz = this.theta[applied_dofs++];
@@ -234,7 +243,6 @@ class Leg {
             dof = this.set_jacobian_section(this.arcs[i], s, J, dof, [rx, ry, rz]);
         }
 
-        console.table(J)
         return J;
     }
 
@@ -256,8 +264,6 @@ class Leg {
             J[1][dof] = d_ef[1]/s;
             J[2][dof] = d_ef[2]/s;
 
-            console.log("dof: " + dof + ", influence: " + d_ef)
-
             arc.update_articulation(init_theta);
             dof++;
         }
@@ -275,8 +281,7 @@ class Leg {
 }
 
 class Node {
-    constructor(name, shape, transform, length) {
-        this.length = length;
+    constructor(name, shape, transform) {
         this.name = name;
         this.shape = shape;
         this.transform_matrix = transform;
