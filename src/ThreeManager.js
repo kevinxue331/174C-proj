@@ -3,6 +3,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
+import Player from './Player.js';
 
 const noise = new SimplexNoise();
 
@@ -15,8 +16,11 @@ export default class ThreeManager {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
         document.body.appendChild(this.renderer.domElement);
+        this.initPointerLock();
+        this.setupKeyListeners();
 
         this.cube = null;
+        this.player = null;
 
         this.init();
     }
@@ -122,24 +126,8 @@ export default class ThreeManager {
         this.buildingList = [];
         this.streetList = [];
         var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
-
-        objLoader.load(
-            'static/obj/miku_lp.obj',
-            (object) => {
-                // const geometry = object.children[0].geometry;
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(0.075,0.075,0.075)
-                const mesh = new THREE.Mesh(geometry, objMat);
-                this.shovel = mesh;
-                this.geoList.push(geometry.clone());
-                this.shovel.position.set(0, -5, 15);
-                //this.scene.add(this.shovel);
-            }
-        );
+        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 });
+        
         objLoader.load(
             'static/obj/aslkdjf.obj',
             (object) => {
@@ -284,73 +272,65 @@ export default class ThreeManager {
         objLoader.load(
             '/static/obj/kirby_torso.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(0, 3, 0)
-                geometry.scale(0.4,0.4,0.4);
-                this.kirby_torso = new THREE.Mesh(geometry, kirby_mat)
-                this.scene.add(this.kirby_torso);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_torso.obj',
+            (object) => {
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
             '/static/obj/kirby_L_arm.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(0, 3, 0)
-                geometry.scale(0.4,0.4,0.4);
-                this.kirby_L_arm = new THREE.Mesh(geometry, kirby_mat)
-                this.scene.add(this.kirby_L_arm);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
             '/static/obj/kirby_R_arm.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(0, 3, 0)
-                geometry.scale(0.4,0.4,0.4);
-                this.kirby_R_arm = new THREE.Mesh(geometry, kirby_mat)
-                this.scene.add(this.kirby_R_arm);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
             '/static/obj/kirby_L_foot.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(0, 3, 0)
-                geometry.scale(0.4,0.4,0.4);
-                this.kirby_L_foot = new THREE.Mesh(geometry, kirby_mat)
-                this.scene.add(this.kirby_L_foot);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
             '/static/obj/kirby_R_foot.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(0, 3, 0)
-                geometry.scale(0.4,0.4,0.4);
-                this.kirby_R_foot = new THREE.Mesh(geometry, kirby_mat)
-                this.scene.add(this.kirby_R_foot);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
+
+
         //this.street1
         //this.scene.add(a_street)
 
@@ -408,9 +388,13 @@ export default class ThreeManager {
 
         //this.makeRoughGround(this.plane2, 1);
 
-        this.controls.update(0.02)
+        this.controls.update(0.02);
+        if (this.player) this.player.update();
+
+
         this.renderer.render(this.scene, this.camera);
     }
+    
 
     start() {
         this.animate();
@@ -557,6 +541,89 @@ export default class ThreeManager {
     }
 
     _easeOutBack (x) { return 1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2); }
+
+    initPointerLock() {
+        const canvas = this.renderer.domElement;
+
+        // Add a click event listener to the canvas
+        const clickToStart = document.getElementById('click-to-start');
+        clickToStart.addEventListener('click', async () => {
+            try {
+                // Hide the click-to-start overlay
+                clickToStart.style.display = 'none';
+
+                // Request pointer lock
+                await canvas.requestPointerLock();
+            } catch (err) {
+                console.error('Failed to enable pointer lock:', err);
+            }
+        });
+
+        // Listen for pointer lock change events
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === canvas) {
+                // Pointer is locked, start tracking mouse movement
+                document.addEventListener('mousemove', this.onMouseMove.bind(this));
+            } else {
+                // Pointer is unlocked, stop tracking mouse movement
+                document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+            }
+        });
+    }
+    onMouseMove(event) {
+        if (!this.player) return;
+
+        const deltaX = event.movementX || event.mozMovementX || 0;
+        const deltaY = event.movementY || event.mozMovementY || 0;
+
+        
+
+        // Update the player's camera rotation based on mouse movement
+        this.player.updateCameraRotation(deltaX, deltaY);
+    }
+    setupKeyListeners() {
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                this.enableFullscreenAndHideCursor();
+            }
+            if (event.key === 'Escape') {
+                this.exitFullscreen();
+            }
+        });
+    }
+
+    enableFullscreenAndHideCursor() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        }
+
+        // Lock the pointer (hide cursor)
+        document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+        if (document.body.requestPointerLock) {
+            document.body.requestPointerLock();
+        }
+    }
+    exitFullscreen() {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            // Exit fullscreen
+            document.exitFullscreen && document.exitFullscreen();
+            document.mozCancelFullScreen && document.mozCancelFullScreen();
+            document.webkitExitFullscreen && document.webkitExitFullscreen();
+            document.msExitFullscreen && document.msExitFullscreen();
+
+            // Release the pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            }
+        }
+    }
+    
 
 
 }
