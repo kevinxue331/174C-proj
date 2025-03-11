@@ -25,12 +25,12 @@ export default class ThreeManager {
     init() {
         // Create a cube
         const geometry = new THREE.BoxGeometry(5,5,5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
         this.cube = new THREE.Mesh(geometry, material);
 
         // create a ball
         const icosahedronGeometry = new THREE.IcosahedronGeometry(10, 4);
-        const lambertMaterial = new THREE.MeshLambertMaterial({
+        const lambertMaterial = new THREE.MeshStandardMaterial({
             color: 0xff00ee,
             wireframe: true
         });
@@ -38,67 +38,66 @@ export default class ThreeManager {
 
         // create planes
         const planeGeometry = new THREE.PlaneGeometry(800, 800, 20, 20);
-        const planeMaterial = new THREE.MeshLambertMaterial({
+        const planeMaterial = new THREE.MeshStandardMaterial({
             color: 0x6904ce,
             side: THREE.DoubleSide,
             wireframe: false
         });
 
         //direction light
-
-        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 1000 );
+        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
         this.directionalLight.castShadow = true;
-        this.directionalLight.position.set(0, 100, 1);
-
-        this.directionalLight.shadow.mapSize.width = 1512; // default
-        this.directionalLight.shadow.mapSize.height = 1512; // default
-        this.directionalLight.shadow.camera.near = 0.5; // default
-        this.directionalLight.shadow.camera.far = 5000; // default
+        this.directionalLight.position.set(-4, 30, -5);
+        this.directionalLight.shadow.mapSize.width = 512; // default
+        this.directionalLight.shadow.mapSize.height = 512; // default
+        this.directionalLight.shadow.camera.near = 0.1; // default
+        this.directionalLight.shadow.camera.far = 10000; // default
         this.scene.add( this.directionalLight );
+
+        // light
+        const ambientLight = new THREE.AmbientLight(0xaaaaaa,0.3);
+        this.scene.add(ambientLight);
+        ambientLight.castShadow = false;
 
 
         let textureLoader = new THREE.TextureLoader()
+        //building tex
         const tex1 = textureLoader.load('/static/tex/building_glass_tex.jpg');
         const tex2 = textureLoader.load('/static/tex/building_tex_2.png');
         const tex3 = textureLoader.load('/static/tex/building_tex_1.jpg');
-        const textureMaterial1 = new THREE.MeshBasicMaterial({ map: tex1 });
-        const textureMaterial2 = new THREE.MeshBasicMaterial({ map: tex2 });
-        const textureMaterial3 = new THREE.MeshBasicMaterial({ map: tex3 });
+
+        //kirby tex
+        const kirby_tex = textureLoader.load('/static/tex/kirby.jpg');
+        //street tex
+        const street_tex = textureLoader.load('/static/tex/street_tex.jpg');
+
+        //building mat
+        const textureMaterial1 = new THREE.MeshStandardMaterial({ map: tex1 });
+        const textureMaterial2 = new THREE.MeshStandardMaterial({ map: tex2 });
+        const textureMaterial3 = new THREE.MeshStandardMaterial({ map: tex3 });
+
+        //kirby mat
+        const kirby_mat = new THREE.MeshStandardMaterial({ map: kirby_tex });
+
+        //street mat
+        const street_tex_mat = new THREE.MeshStandardMaterial({ map: street_tex });
+
         const geo = new THREE.BoxGeometry(1, 1, 1);
         this.cube = new THREE.Mesh(geo, textureMaterial2)
         this.scene.add(this.cube)
 
+        //dummy ground plane
         this.plane = new THREE.Mesh(planeGeometry, textureMaterial3);
         this.plane.rotation.x = -0.5 * Math.PI;
         this.plane.position.set(0, 0, 0);
-        this.plane.castShadow = true;
+        this.plane.castShadow = false;
         this.plane.receiveShadow = true;
-
-
-        this.plane2 = new THREE.Mesh(planeGeometry, textureMaterial2);
-        this.plane2.rotation.x = -0.5 * Math.PI;
-        this.plane2.position.set(0, -45, 0);
 
 
         // add objects to scene
         //this.scene.add(this.plane);
         this.scene.add(this.plane);
         // this.scene.add(this.ball);
-
-        // light
-        //const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
-        //this.scene.add(ambientLight);
-        //ambientLight.castShadow = true;
-
-        /*
-        const spotLight = new THREE.SpotLight(0xffffff);
-        spotLight.intensity = 10000;
-        spotLight.position.set(-50, 0, 20);
-        spotLight.lookAt(this.ball);
-        spotLight.castShadow = true;
-        this.scene.add(spotLight);
-
-         */
 
 
         // Camera position
@@ -120,6 +119,8 @@ export default class ThreeManager {
         // OBJS
         let objLoader = new OBJLoader();
         this.geoList = [];
+        this.buildingList = [];
+        this.streetList = [];
         var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
 
         objLoader.load(
@@ -165,7 +166,7 @@ export default class ThreeManager {
                 this.building = mesh;
                 this.building.castShadow = true;
                 this.building.receiveShadow = true;
-                this.scene.add(this.building);
+                //this.scene.add(this.building);
 
             }
         );
@@ -184,6 +185,7 @@ export default class ThreeManager {
                 this.building2.castShadow = true;
                 this.building2.receiveShadow = true;
                 this.scene.add(this.building2);
+
             }
         );
         objLoader.load(
@@ -203,10 +205,155 @@ export default class ThreeManager {
                 this.scene.add(this.building3);
             }
         );
+        objLoader.load(
+            '/static/obj/building_box.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(30, 0, 65)
+                geometry.scale(0.4,0.4,0.4);
+                const mesh = new THREE.Mesh(geometry, textureMaterial2)
+                this.building4 = mesh;
+                this.building4.castShadow = true;
+                this.building4.receiveShadow = true;
+                this.scene.add(this.building4);
+            }
+        );
+        objLoader.load(
+            '/static/obj/street_1.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(12, 0.5, 12)
+                geometry.scale(0.4,0.4,0.4);
+                this.street1 = new THREE.Mesh(geometry, street_tex_mat)
+                this.streetList.push(this.street1)
+                this.scene.add(this.street2);
+            }
+        );
+        objLoader.load(
+            '/static/obj/street_2.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(12, 0.5, 12)
+                geometry.scale(0.4,0.4,0.4);
+                this.street2 = new THREE.Mesh(geometry, street_tex_mat)
+                this.streetList.push(this.street2)
+                this.scene.add(this.street2);
+            }
+        );
+        objLoader.load(
+            '/static/obj/street_3.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(12, 0.5, 12)
+                geometry.scale(0.4,0.4,0.4);
+                this.street3 = new THREE.Mesh(geometry, street_tex_mat)
+                this.streetList.push(this.street3)
+                this.scene.add(this.street3);
+            }
+        );
+        objLoader.load(
+            '/static/obj/street_4.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(12, 0.5, 12)
+                geometry.scale(0.4,0.4,0.4);
+                this.street4 = new THREE.Mesh(geometry, street_tex_mat)
+                this.scene.add(this.street4);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_torso.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(0, 3, 0)
+                geometry.scale(0.4,0.4,0.4);
+                this.kirby_torso = new THREE.Mesh(geometry, kirby_mat)
+                this.scene.add(this.kirby_torso);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_L_arm.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(0, 3, 0)
+                geometry.scale(0.4,0.4,0.4);
+                this.kirby_L_arm = new THREE.Mesh(geometry, kirby_mat)
+                this.scene.add(this.kirby_L_arm);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_R_arm.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(0, 3, 0)
+                geometry.scale(0.4,0.4,0.4);
+                this.kirby_R_arm = new THREE.Mesh(geometry, kirby_mat)
+                this.scene.add(this.kirby_R_arm);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_L_foot.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(0, 3, 0)
+                geometry.scale(0.4,0.4,0.4);
+                this.kirby_L_foot = new THREE.Mesh(geometry, kirby_mat)
+                this.scene.add(this.kirby_L_foot);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_R_foot.obj',
+            (object) => {
+                const objGeometries = [];
+                for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.push(object.children[i].geometry);
+                }
+                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
+                geometry.translate(0, 3, 0)
+                geometry.scale(0.4,0.4,0.4);
+                this.kirby_R_foot = new THREE.Mesh(geometry, kirby_mat)
+                this.scene.add(this.kirby_R_foot);
+            }
+        );
+        //this.street1
+        //this.scene.add(a_street)
 
-
-        //spotLight.lookAt(this.ball);
-        //this.building1.position.set(0.5, -30, 0.5)
         // SPIDER
         this.spider = new Spider();
         this.spider.addToScene(this.scene);
