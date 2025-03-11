@@ -2,21 +2,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Kirby Escape</title>
+    <title>Three.js Example</title>
     <link rel="stylesheet" href="index.css" />
     <style>
         body { margin: 0; }
         canvas { display: block; }
-        #click-to-start {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            z-index: 10; /* Ensure it's above the canvas */
-        }
     </style>
 </head>
 
@@ -26,10 +16,6 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.3.0/simplex-noise.min.js'></script>
     </script>
-
-    <div id="click-to-start">
-        Click to Start
-    </div>
 
     <script type="importmap">
         {
