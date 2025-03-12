@@ -45,6 +45,8 @@ export default class Player {
     initListeners() {
         window.addEventListener('keydown', (event) => this.handleKey(event, true));
         window.addEventListener('keyup', (event) => this.handleKey(event, false));
+        document.addEventListener('mousemove', (event) => this.handleMouseMove(event));
+        document.addEventListener('click', () => this.requestPointerLock());
     }
 
     handleKey(event, isPressed) {
@@ -89,8 +91,24 @@ export default class Player {
         console.log(`Camera Quaternion: X=${this.camera.quaternion.x}, Y=${this.camera.quaternion.y}, Z=${this.camera.quaternion.z}, W=${this.camera.quaternion.w}`); // Debugging
     }
 
+    handleMouseMove(event) {
+        if (document.pointerLockElement === document.body) {
+            // Use movementX/Y which gives delta from last position regardless of screen boundaries
+            const deltaX = event.movementX || 0;
+            const deltaY = event.movementY || 0;
+            
+            this.updateCameraRotation(deltaX, deltaY);
+        }
+    }
 
-
+    requestPointerLock() {
+        // Request pointer lock on the document body
+        document.body.requestPointerLock = document.body.requestPointerLock || 
+                                            document.body.mozRequestPointerLock ||
+                                            document.body.webkitRequestPointerLock;
+        
+        document.body.requestPointerLock();
+    }
     update() {
         // Calculate the camera's offset from Kirby based on its rotation
         const offset = new THREE.Vector3(0, 0, this.cameraDistance);
