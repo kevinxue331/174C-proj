@@ -29,26 +29,24 @@ export default class ThreeManager {
 
     // initialize objects, scene, camera, lights
     init() {
-        // Create a cube
+        // Create a cubea
+        /*
         const geometry = new THREE.BoxGeometry(5,5,5);
         const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
         this.cube = new THREE.Mesh(geometry, material);
 
+         */
+
         // create a ball
+        /*
         const icosahedronGeometry = new THREE.IcosahedronGeometry(10, 4);
         const lambertMaterial = new THREE.MeshStandardMaterial({
             color: 0xff00ee,
             wireframe: true
         });
-        this.ball = new THREE.Mesh(icosahedronGeometry, lambertMaterial);
 
-        // create planes
-        const planeGeometry = new THREE.PlaneGeometry(800, 800, 20, 20);
-        const planeMaterial = new THREE.MeshStandardMaterial({
-            color: 0x6904ce,
-            side: THREE.DoubleSide,
-            wireframe: false
-        });
+         */
+
 
         //direction light
         this.directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
@@ -67,51 +65,43 @@ export default class ThreeManager {
 
 
         let textureLoader = new THREE.TextureLoader()
-        //building tex
-        const tex1 = textureLoader.load('/static/tex/building_glass_tex.jpg');
-        const tex2 = textureLoader.load('/static/tex/building_tex_2.png');
-        const tex3 = textureLoader.load('/static/tex/building_tex_1.jpg');
+
+        //skysphere
+        const sky_tex = textureLoader.load('/static/tex/sky_tex.jpg');
+        const sky_mat = new THREE.MeshStandardMaterial({ map: sky_tex,
+            side: THREE.DoubleSide,
+            emissiveMap: sky_tex,
+            emissive: new THREE.Color(1, 1, 1),
+            emissiveIntensity: 0.8});
+
+        const sphereGeo = new THREE.IcosahedronGeometry(10, 4);
+        this.sky = new THREE.Mesh(sphereGeo, sky_mat)
+        this.sky.scale.set(40, 40, 40)
+        this.scene.add(this.sky);
+        this.sky.castShadow = false;
+        this.sky.receiveShadow = false;
 
         //kirby tex
         const kirby_tex = textureLoader.load('/static/tex/kirby.jpg');
-        //street tex
-        const street_tex = textureLoader.load('/static/tex/street_tex.jpg');
-
-        //building mat
-        const textureMaterial1 = new THREE.MeshStandardMaterial({ map: tex1 });
-        const textureMaterial2 = new THREE.MeshStandardMaterial({ map: tex2 });
-        const textureMaterial3 = new THREE.MeshStandardMaterial({ map: tex3 });
 
         //kirby mat
         const kirby_mat = new THREE.MeshStandardMaterial({ map: kirby_tex });
 
-        //street mat
-        const street_tex_mat = new THREE.MeshStandardMaterial({ map: street_tex });
-
+        /*
         const geo = new THREE.BoxGeometry(1, 1, 1);
-        this.cube = new THREE.Mesh(geo, textureMaterial2)
+        this.cube = new THREE.Mesh(geo, building2_mat)
         this.scene.add(this.cube)
-
-        //dummy ground plane
-        this.plane = new THREE.Mesh(planeGeometry, textureMaterial3);
-        this.plane.rotation.x = -0.5 * Math.PI;
-        this.plane.position.set(0, 0, 0);
-        this.plane.castShadow = false;
-        this.plane.receiveShadow = true;
+         */
 
         //draw city
         this.city = new City(this.scene);
-        this.city.loadModels();
 
-        // add objects to scene
-        //this.scene.add(this.plane);
-        this.scene.add(this.plane);
-        // this.scene.add(this.ball);
 
 
         // Camera position
         this.camera.position.z = 30;
         this.camera.position.y = 10;
+
         /*
         forward back left right (translate): WASD
         up down: R, F
@@ -124,28 +114,12 @@ export default class ThreeManager {
         this.controls.dragToLook = true;
 
 
-        // OBJ
         // OBJS
         let objLoader = new OBJLoader();
         this.geoList = [];
-        this.buildingList = [];
-        this.streetList = [];
         var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
         this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 });
-        
-        objLoader.load(
-            'static/obj/aslkdjf.obj',
-            (object) => {
-                // const geometry = object.children[0].geometry;
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(5.75,5.75,5.75);
-                this.geoList.push(geometry.clone());
-            }
-        );
+
         objLoader.load(
             '/static/obj/kirby_torso.obj',
             (object) => {
@@ -207,13 +181,8 @@ export default class ThreeManager {
             }
         );
 
-
-        //this.street1
-        //this.scene.add(a_street)
-
         // SPIDER
         this.spider = new Spider();
-
         this.spider.addToScene(this.scene);
 
         // Handling resize
@@ -227,44 +196,8 @@ export default class ThreeManager {
     animate() {
         requestAnimationFrame(this.animate.bind(this));
 
-        // Rotate the cube
-        this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
-
-        if(this.shovel != null) {
-            this.shovel.rotation.y += 0.01;
-            if(!this.paused) {
-                this.pcnt += 0.01;
-                let progress = Math.sin(this.pcnt)/2+0.5;
-                this.morphMesh(progress);
-                if(Math.round(progress*1000)/1000 == 0 || Math.round(progress*1000)/1000 == 1) {
-                    this.paused = true;
-                    //this.shovel.geometry.computeVertexNormals();
-                }
-            }
-            else {
-                this.pauseCounter++
-                if(this.pauseCounter >= 75 && this.pauseCounter < 100) {
-                    this.pcnt += 0.01;
-                    let progress = Math.sin(this.pcnt)/2+0.5;
-                    this.morphMesh(progress);
-                }
-                else if (this.pauseCounter >= 100) {
-                    this.paused = false;
-                    this.pauseCounter = 0;
-                }
-            }
-        }
-
-        // Rotate the ball
-        this.ball.rotation.x += 0.01;
-        this.ball.rotation.y += 0.01;
-
         // tick the spider
         this.spider.tick();
-
-
-        //this.makeRoughGround(this.plane2, 1);
 
         this.controls.update(0.02);
         if (this.player) this.player.update();
