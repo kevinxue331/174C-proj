@@ -550,7 +550,6 @@ export default class ThreeManager {
         clickToStart.addEventListener('click', async () => {
             try {
                 // Hide the click-to-start overlay
-                clickToStart.style.display = 'none';
 
                 // Request pointer lock
                 await canvas.requestPointerLock();

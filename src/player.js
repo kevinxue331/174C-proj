@@ -10,14 +10,12 @@ export default class Player {
         this.jumpStrength = 0.5;
         this.onGround = false;
 
-
         // Create Kirby's mesh
         this.kirby = new THREE.Group();
         this.kirby.position.set(position.x, position.y, position.z);
         this.scene.add(this.kirby);
 
         this.camera.lookAt(this.kirby.position); // initially look at kirby
-
 
         this.keys = {
             forward: false,
@@ -63,32 +61,32 @@ export default class Player {
                 break;
         }
     }
+
     updateCameraRotation(deltaX, deltaY) {
         // Update horizontal rotation (yaw)
         this.cameraRotationY -= deltaX * this.rotationSpeed;
-    
+
         // Update vertical rotation (pitch)
         this.cameraRotationX -= deltaY * this.rotationSpeed;
-    
+
         // Clamp vertical rotation to prevent flipping
         this.cameraRotationX = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.cameraRotationX));
-    
+
         // Create a quaternion for the yaw (horizontal rotation)
         const yawQuaternion = new THREE.Quaternion();
         yawQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.cameraRotationY);
-    
+
         // Create a quaternion for the pitch (vertical rotation)
         const pitchQuaternion = new THREE.Quaternion();
         pitchQuaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), this.cameraRotationX);
-    
+
         // Combine the yaw and pitch rotations
         const finalQuaternion = new THREE.Quaternion();
         finalQuaternion.multiplyQuaternions(yawQuaternion, pitchQuaternion);
-    
+
         // Set the camera's quaternion
         this.camera.quaternion.copy(finalQuaternion);
-    
-        console.log(`Camera Quaternion: X=${this.camera.quaternion.x}, Y=${this.camera.quaternion.y}, Z=${this.camera.quaternion.z}, W=${this.camera.quaternion.w}`); // Debugging
+
     }
 
     handleMouseMove(event) {
@@ -96,7 +94,7 @@ export default class Player {
             // Use movementX/Y which gives delta from last position regardless of screen boundaries
             const deltaX = event.movementX || 0;
             const deltaY = event.movementY || 0;
-            
+
             this.updateCameraRotation(deltaX, deltaY);
         }
     }
@@ -104,41 +102,59 @@ export default class Player {
     requestPointerLock() {
         // Request pointer lock on the document body
         document.body.requestPointerLock = document.body.requestPointerLock || 
-                                            document.body.mozRequestPointerLock ||
-                                            document.body.webkitRequestPointerLock;
-        
+                                          document.body.mozRequestPointerLock ||
+                                          document.body.webkitRequestPointerLock;
+
         document.body.requestPointerLock();
     }
+
     update() {
         // Calculate the camera's offset from Kirby based on its rotation
         const offset = new THREE.Vector3(0, 0, this.cameraDistance);
         offset.applyQuaternion(this.camera.quaternion);
-    
+
         // Set the camera's position relative to Kirby
         this.camera.position.copy(this.kirby.position).add(offset);
         this.camera.position.y += this.cameraHeight; // Adjust for camera height
-    
-        console.log(`Camera Position: X=${this.camera.position.x}, Y=${this.camera.position.y}, Z=${this.camera.position.z}`); // Debugging
-    
-        // Handle movement and velocity
-        if (this.keys.forward) this.velocity.z -= this.speed;
-        if (this.keys.backward) this.velocity.z += this.speed;
-        if (this.keys.left) this.velocity.x -= this.speed;
-        if (this.keys.right) this.velocity.x += this.speed;
-    
+
+
+        // Calculate movement direction based on camera orientation
+        const movementDirection = new THREE.Vector3();
+
+        if (this.keys.forward) movementDirection.z -= 1;
+        if (this.keys.backward) movementDirection.z += 1;
+        if (this.keys.left) movementDirection.x -= 1;
+        if (this.keys.right) movementDirection.x += 1;
+
+        // Normalize the movement direction to ensure consistent speed
+        movementDirection.normalize();
+
+        // Rotate the movement direction to align with the camera's orientation
+        movementDirection.applyQuaternion(this.camera.quaternion);
+
+        // Update velocity based on movement direction
+        this.velocity.x = movementDirection.x * this.speed;
+        this.velocity.z = movementDirection.z * this.speed;
+
         // Apply gravity
         this.velocity.y += this.gravity;
-    
+
         // Move Kirby
         this.kirby.position.add(this.velocity);
-    
+
+        // Rotate Kirby to face the movement direction
+        if (movementDirection.x !== 0 || movementDirection.z !== 0) {
+            const targetAngle = Math.atan2(movementDirection.x, movementDirection.z)-Math.PI / 2;
+            this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
+        }
+
         // Simple ground collision
         if (this.kirby.position.y <= 3) {
             this.kirby.position.y = 3;
             this.velocity.y = 0;
             this.onGround = true;
         }
-    
+
         // Apply damping
         this.velocity.x *= 0.9;
         this.velocity.z *= 0.9;
