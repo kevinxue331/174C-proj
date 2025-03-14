@@ -4,6 +4,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
 import Player from './Player.js';
+import City from './city.js';
 
 const noise = new SimplexNoise();
 
@@ -98,6 +99,9 @@ export default class ThreeManager {
         this.plane.castShadow = false;
         this.plane.receiveShadow = true;
 
+        //draw city
+        this.city = new City(this.scene);
+        this.city.loadModels();
 
         // add objects to scene
         //this.scene.add(this.plane);
@@ -140,134 +144,6 @@ export default class ThreeManager {
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
                 geometry.scale(5.75,5.75,5.75);
                 this.geoList.push(geometry.clone());
-            }
-        );
-        objLoader.load(
-            '/static/obj/building_elliptical.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial1)
-                this.building = mesh;
-                this.building.castShadow = true;
-                this.building.receiveShadow = true;
-                //this.scene.add(this.building);
-
-            }
-        );
-        objLoader.load(
-            '/static/obj/building_bent.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 5)
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial3)
-                this.building2 = mesh;
-                this.building2.castShadow = true;
-                this.building2.receiveShadow = true;
-                this.scene.add(this.building2);
-
-            }
-        );
-        objLoader.load(
-            '/static/obj/building_square_1.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 35)
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial2)
-                this.building3 = mesh;
-                this.building3.castShadow = true;
-                this.building3.receiveShadow = true;
-                this.scene.add(this.building3);
-            }
-        );
-        objLoader.load(
-            '/static/obj/building_box.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 65)
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial2)
-                this.building4 = mesh;
-                this.building4.castShadow = true;
-                this.building4.receiveShadow = true;
-                this.scene.add(this.building4);
-            }
-        );
-        objLoader.load(
-            '/static/obj/street_1.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
-                this.street1 = new THREE.Mesh(geometry, street_tex_mat)
-                this.streetList.push(this.street1)
-                this.scene.add(this.street2);
-            }
-        );
-        objLoader.load(
-            '/static/obj/street_2.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
-                this.street2 = new THREE.Mesh(geometry, street_tex_mat)
-                this.streetList.push(this.street2)
-                this.scene.add(this.street2);
-            }
-        );
-        objLoader.load(
-            '/static/obj/street_3.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
-                this.street3 = new THREE.Mesh(geometry, street_tex_mat)
-                this.streetList.push(this.street3)
-                this.scene.add(this.street3);
-            }
-        );
-        objLoader.load(
-            '/static/obj/street_4.obj',
-            (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
-                this.street4 = new THREE.Mesh(geometry, street_tex_mat)
-                this.scene.add(this.street4);
             }
         );
         objLoader.load(
@@ -337,6 +213,7 @@ export default class ThreeManager {
 
         // SPIDER
         this.spider = new Spider();
+
         this.spider.addToScene(this.scene);
 
         // Handling resize
