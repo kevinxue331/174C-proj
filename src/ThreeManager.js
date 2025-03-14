@@ -18,6 +18,7 @@ export default class ThreeManager {
         document.body.appendChild(this.renderer.domElement);
         this.initPointerLock();
         this.setupKeyListeners();
+        this.initCrosshair();
 
         this.cube = null;
         this.player = null;
@@ -621,6 +622,11 @@ export default class ThreeManager {
                 document.exitPointerLock();
             }
         }
+    }
+    initCrosshair() {
+        const crosshair = document.createElement("div");
+        crosshair.id = "crosshair";
+        document.body.appendChild(crosshair);
     }
     
 

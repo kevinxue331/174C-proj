@@ -44,8 +44,43 @@ export default class Player {
         window.addEventListener('keydown', (event) => this.handleKey(event, true));
         window.addEventListener('keyup', (event) => this.handleKey(event, false));
         document.addEventListener('mousemove', (event) => this.handleMouseMove(event));
-        document.addEventListener('click', () => this.requestPointerLock());
+        window.addEventListener('click', () => {
+            this.requestPointerLock(); // Lock pointer
+            this.shootRope(); // Shoot rope
+        });
+        
     }
+    createRope(start, end) {
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+        const rope = new THREE.Line(geometry, material);
+    
+        this.scene.add(rope);
+    
+        setTimeout(() => this.scene.remove(rope), 3000); // Remove rope after 3s
+    }
+    shootRope() {
+        const maxLength = 20; // Maximum rope length
+        const ropeStartY = 2;
+        const direction = new THREE.Vector3();
+        let ropeStart = this.kirby.position.clone();
+        ropeStart.y = ropeStart.y + ropeStartY; // move rope up a bit so it looks like its coming from kirby
+
+        this.camera.getWorldDirection(direction); // Get camera's forward direction
+    
+        const raycaster = new THREE.Raycaster(ropeStart, direction.normalize(), 0, maxLength);
+        const intersects = raycaster.intersectObjects(this.scene.children, true); // Check for collisions
+    
+        let ropeEnd;
+        if (intersects.length > 0) {
+            ropeEnd = intersects[0].point; // Stop at first collision
+        } else {
+            ropeEnd = this.kirby.position.clone().addScaledVector(direction, maxLength); // Max length reached
+        }
+    
+        this.createRope(ropeStart, ropeEnd);
+    }
+        
 
     handleKey(event, isPressed) {
         switch (event.code) {
@@ -100,7 +135,6 @@ export default class Player {
     }
 
     requestPointerLock() {
-        // Request pointer lock on the document body
         document.body.requestPointerLock = document.body.requestPointerLock || 
                                           document.body.mozRequestPointerLock ||
                                           document.body.webkitRequestPointerLock;
@@ -149,8 +183,8 @@ export default class Player {
         }
 
         // Simple ground collision
-        if (this.kirby.position.y <= 3) {
-            this.kirby.position.y = 3;
+        if (this.kirby.position.y <= 0) {
+            this.kirby.position.y = 0;
             this.velocity.y = 0;
             this.onGround = true;
         }
@@ -159,4 +193,5 @@ export default class Player {
         this.velocity.x *= 0.9;
         this.velocity.z *= 0.9;
     }
+    
 }
