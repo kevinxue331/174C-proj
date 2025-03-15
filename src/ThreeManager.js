@@ -3,6 +3,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
+import SkinnedCylinder from "./skinnedmesh.js";
 
 const noise = new SimplexNoise();
 
@@ -165,7 +166,7 @@ export default class ThreeManager {
                 this.building = mesh;
                 this.building.castShadow = true;
                 this.building.receiveShadow = true;
-                this.scene.add(this.building);
+                // this.scene.add(this.building);
 
             }
         );
@@ -183,7 +184,7 @@ export default class ThreeManager {
                 this.building2 = mesh;
                 this.building2.castShadow = true;
                 this.building2.receiveShadow = true;
-                this.scene.add(this.building2);
+                // this.scene.add(this.building2);
             }
         );
         objLoader.load(
@@ -200,7 +201,7 @@ export default class ThreeManager {
                 this.building3 = mesh;
                 this.building3.castShadow = true;
                 this.building3.receiveShadow = true;
-                this.scene.add(this.building3);
+                // this.scene.add(this.building3);
             }
         );
 
@@ -209,7 +210,23 @@ export default class ThreeManager {
         //this.building1.position.set(0.5, -30, 0.5)
         // SPIDER
         this.spider = new Spider();
-        this.spider.addToScene(this.scene);
+        // this.spider.addToScene(this.scene);
+
+        // Create material
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+        // Instantiate skinned cylinder
+        const skinnedCylinder = new SkinnedCylinder(mat);
+
+        // Add to scene
+        this.scene.add(skinnedCylinder.getMesh());
+        skinnedCylinder.getMesh().position.y += 20;
+
+        // Rotate bones to test deformation
+        // skinnedCylinder.rotateBone(0, -0.2, 0, 0);
+        // skinnedCylinder.rotateBone(1, 0.4, 0, 0);
+        // skinnedCylinder.rotateBone(2, -0.2, 0, 0);
+        // this.skinnedmesh.init();
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -256,7 +273,7 @@ export default class ThreeManager {
         this.ball.rotation.y += 0.01;
 
         // tick the spider
-        this.spider.tick();
+        // this.spider.tick();
 
 
         //this.makeRoughGround(this.plane2, 1);

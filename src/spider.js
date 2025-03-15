@@ -6,12 +6,23 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 
 export default class Spider {
     constructor() {
-        const geometry = new THREE.BoxGeometry(5,5,5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        this.cube = new THREE.Mesh(geometry, material);
-        this.leg = new Leg()
+        const geo = new THREE.BoxGeometry(5,5,5);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.cube = new THREE.Mesh(geo, mat);
         this.bodyTheta = 0;
+        this.bodyY = 3;
         window.addEventListener('keydown', this.onKeyDown.bind(this));
+        // initialize body
+        const geometry = new THREE.BoxGeometry(2.5,2.5,2.5);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        this.body = new Node("body", new THREE.Mesh(geometry, material), math.identity(4));
+        this.shoulder = new Arc("arc", this.body, null, matrixhelper.translationMatrix(1.25,0,0));
+        this.shoulder.set_dof(false,true,false);
+        this.body.children_arcs.push(this.shoulder);
+        this.root = new Arc("root", null, this.body, matrixhelper.translationMatrix(-10,3,10));
+        this.root.set_dof(false,false,false);
+        // initialize legs
+        this.leg = new Leg(this.body, this.root, this.shoulder);
     }
 
     addToScene(scene) {
@@ -24,50 +35,68 @@ export default class Spider {
             // this.leg.Pg = math.add(this.leg.Pg, [-1,0,0]);
             this.leg.apply_theta();
         }
-        if (event.code === 'KeyA') {
-            this.leg.Pg = math.add(this.leg.Pg, [-0.1,0,0]);
+        if (event.code === 'KeyJ') {
+            this.root.location_matrix = math.multiply(matrixhelper.translationMatrix(-0.1,0,0), this.root.location_matrix);
             // this.leg.apply_theta();
         }
-        if (event.code === 'KeyD') {
-            this.leg.Pg = math.add(this.leg.Pg, [0.1,0,0]);
+        if (event.code === 'KeyL') {
+            this.root.location_matrix = math.multiply(matrixhelper.translationMatrix(0.1,0,0), this.root.location_matrix);
             // this.leg.apply_theta();
         }
-        if (event.code === 'KeyW') {
-            this.leg.Pg = math.add(this.leg.Pg, [0,0.1,0]);
+        if (event.code === 'KeyI') {
+            this.root.location_matrix = math.multiply(matrixhelper.translationMatrix(0,0,-0.1), this.root.location_matrix);
             // this.leg.apply_theta();
         }
-        if (event.code === 'KeyS') {
-            this.leg.Pg = math.add(this.leg.Pg, [0,-0.1,0]);
+        if (event.code === 'KeyK') {
+            this.root.location_matrix = math.multiply(matrixhelper.translationMatrix(0,0,0.1), this.root.location_matrix);
             // this.leg.apply_theta();
         }
-        if (event.code === 'KeyR') {
+        if (event.code === 'KeyY') {
             this.bodyTheta+=0.0174533;
             this.leg.root.articulation_matrix = matrixhelper.rotationZ(this.bodyTheta)
+            this.leg.update();
+        }
+        if (event.code === 'KeyT') {
+            this.bodyY += 0.1;
+            this.leg.root.location_matrix = matrixhelper.translationMatrix(0, this.bodyY, 0)
             this.leg.update();
         }
     }
 
     tick() {
-        // this.cube.rotation.x += 0.01;
-        // this.cube.rotation.y += 0.01;
-        // this.cube.matrix
+        const leg_rest = [3, -2, 0, 1]
+        const global_position = math.multiply(this.root.location_matrix, math.multiply(this.root.articulation_matrix, leg_rest)).toArray();
+        const leg_rest_global = [global_position[0], global_position[1], global_position[2]];
+        const distance_to_rest = math.distance(this.leg.Pg, leg_rest_global);
+        // console.log(distance_to_rest);
+
+        if(distance_to_rest > 1) this.leg.stepping = true;
+        else this.leg.update();
+
+        if(this.leg.stepping) {
+            // const to_rest_vec = math.divide(math.subtract(leg_rest_global, this.leg.Pg), math.norm(math.subtract(leg_rest_global, this.leg.Pg)));
+            const to_rest_vec = math.subtract(leg_rest_global, this.leg.Pg)
+            const to_rest_vec_norm = math.divide(to_rest_vec, math.norm(to_rest_vec));
+            // console.log(to_rest_vec);
+            const next_Pg = math.add(this.leg.Pg, math.multiply(to_rest_vec_norm, 0.25));
+            this.leg.set_goal(next_Pg);
+        }
+
+        if(this.leg.stepping && distance_to_rest <= 0.25) this.leg.stepping = false;
         this.leg.apply_theta();
-        // this.leg.update();
+
     }
 }
 
 class Leg {
-    constructor() {
-        const geometry = new THREE.BoxGeometry(2.5,2.5,2.5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        this.body = new Node("body", new THREE.Mesh(geometry, material), math.identity(4));
-        this.shoulder = new Arc("arc", this.body, null, matrixhelper.translationMatrix(1.25,0,0));
-        this.shoulder.set_dof(true,true,true);
-        this.body.children_arcs.push(this.shoulder);
-        this.root = new Arc("root", null, this.body, math.identity(4));
-        this.root.set_dof(false,false,false);
+    constructor(body, root, shoulder) {
+        this.body = body;
+        this.root = root;
+        this.shoulder = shoulder;
         this.nodes = [this.body];
         this.arcs = [this.root, this.shoulder];
+        this.Pg = [0, 0, 0];
+        this.stepping = false;
     }
 
     addNode(length, shape) {
@@ -81,7 +110,7 @@ class Leg {
         let arc_location = matrixhelper.translationMatrix(length, 0, 0)
 
         let arc = new Arc("arc", node, null, arc_location);
-        arc.set_dof(true, true, true);
+        arc.set_dof(false, false, true);
         node.children_arcs.push(arc);
         this.arcs.push(arc);
     }
@@ -93,9 +122,9 @@ class Leg {
         const larmmat = new THREE.MeshBasicMaterial({ color: 0x002fff });
         const handmat = new THREE.MeshBasicMaterial({ color: 0xff006f });
 
-        this.addNode(4, new THREE.Mesh(geometry, uarmmat));
-        this.addNode(5, new THREE.Mesh(geometry, larmmat));
-        this.addNode(3, new THREE.Mesh(geometry, handmat));
+        this.addNode(2, new THREE.Mesh(geometry, uarmmat));
+        this.addNode(2.5, new THREE.Mesh(geometry, larmmat));
+        this.addNode(1.5, new THREE.Mesh(geometry, handmat));
         // this.addNode(1, new THREE.Mesh(geometry, handmat));
 
         this.goal = new THREE.Mesh(geometry, material);
@@ -114,9 +143,13 @@ class Leg {
         }
 
         this.theta = Array(this.dof).fill(0);
-        this.Pg = [12, 0, 0];
 
         this.update()
+    }
+
+    set_goal(goal) {
+        this.Pg = goal;
+        // this.apply_theta();
     }
 
     update() {
@@ -154,6 +187,7 @@ class Leg {
 
             matrix = this.matrix_stack.pop();
             for (const next_arc of node.children_arcs) {
+                if(!this.arcs.includes(next_arc)) continue;
                 this.matrix_stack.push(math.clone(matrix));
                 this._rec_draw(next_arc, matrix);
                 matrix = this.matrix_stack.pop();
@@ -163,7 +197,6 @@ class Leg {
 
     // mapping from global theta to each joint theta
     apply_theta() {
-        // TODO: Implement your theta mapping here
         this.goal.position.x = this.Pg[0];
         this.goal.position.y = this.Pg[1];
         this.goal.position.z = this.Pg[2];
@@ -178,6 +211,10 @@ class Leg {
         const max_iterations = 20;
         const min_error_change = 0.001;
 
+        // for(let i=0; i<this.arcs.length; i++) {
+        //     this.arcs[i].update_articulation([0,0,0]);
+        // }
+        this.shoulder.articulation_matrix = matrixhelper.rotationZ(0.785398)
         while (math.norm(this.E) > 0.1 && iterations < max_iterations) {
             prev_error = math.norm(this.E);
             iterations++;

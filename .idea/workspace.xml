@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/skinnedmesh.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ThreeManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ThreeManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/spider.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="2fP03VCWgANRKk7aIZh3iMDw2II" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;JavaScript Debug.index.html.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.TextManager.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.ThreeManager.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.index.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.spider.js.executor&quot;: &quot;Run&quot;,
+    &quot;Node.js.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/froze/Desktop/CS 174C/174C-final-project&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\WebStorm 2024.1.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\froze\Desktop\MIKU PROJECT\static\obj" />
+      <recent name="C:\Users\froze\Desktop\MIKU PROJECT\src\morpher" />
+      <recent name="C:\Users\froze\Desktop\MIKU PROJECT" />
+      <recent name="C:\Users\froze\Desktop\MIKU PROJECT\static" />
+      <recent name="C:\Users\froze\Desktop\MIKU PROJECT\src\morpher\meshes" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-2e7d6887c066-JavaScript-WS-241.15989.47" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="" />
+      <created>1713687206143</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1713687206143</updated>
+      <workItem from="1713687757821" duration="1068000" />
+      <workItem from="1713688850042" duration="11104000" />
+      <workItem from="1713758274430" duration="177000" />
+      <workItem from="1714111056017" duration="855000" />
+      <workItem from="1714274659196" duration="57000" />
+      <workItem from="1715144222951" duration="9862000" />
+      <workItem from="1715164476715" duration="5371000" />
+      <workItem from="1715170046197" duration="172000" />
+      <workItem from="1715209993004" duration="8625000" />
+      <workItem from="1715219258126" duration="1832000" />
+      <workItem from="1726784786993" duration="716000" />
+      <workItem from="1731654108697" duration="881000" />
+      <workItem from="1738785701903" duration="18000" />
+      <workItem from="1740631226128" duration="871000" />
+      <workItem from="1740632151950" duration="1891000" />
+      <workItem from="1740729413196" duration="20337000" />
+      <workItem from="1741285137229" duration="15317000" />
+      <workItem from="1741580581506" duration="88000" />
+      <workItem from="1741580671828" duration="3994000" />
+      <workItem from="1741829799526" duration="18825000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
