@@ -25,6 +25,7 @@ export default class ThreeManager {
         this.player = null;
 
         this.init();
+        console.log("manager constructor")
     }
 
     // initialize objects, scene, camera, lights
@@ -96,8 +97,6 @@ export default class ThreeManager {
         //draw city
         this.city = new City(this.scene);
 
-
-
         // Camera position
         this.camera.position.z = 30;
         this.camera.position.y = 10;
@@ -117,7 +116,7 @@ export default class ThreeManager {
         // OBJS
         let objLoader = new OBJLoader();
         this.geoList = [];
-        var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
+        //var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
         this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 });
 
         objLoader.load(
@@ -178,15 +177,17 @@ export default class ThreeManager {
                 geo.scale(0.4, 0.4, 0.4);
                 const mesh = new THREE.Mesh(geo, kirby_mat);
                 this.player.addBodyPart(mesh);
+                console.log("kirby loaded");
             }
         );
 
         // SPIDER
-        this.spider = new Spider();
-        this.spider.addToScene(this.scene);
+        //this.spider = new Spider();
+        //this.spider.addToScene(this.scene);
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
+        console.log("end of init");
     }
 
     pcnt = 0;
@@ -197,7 +198,7 @@ export default class ThreeManager {
         requestAnimationFrame(this.animate.bind(this));
 
         // tick the spider
-        this.spider.tick();
+        //this.spider.tick();
 
         this.controls.update(0.02);
         if (this.player) this.player.update();

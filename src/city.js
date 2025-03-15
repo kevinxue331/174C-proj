@@ -5,16 +5,18 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 
 export default class City {
     constructor(scene) {
+        this.all = [];
         this.scene = scene;
+        this.global_scale = 1;
         this.loadModels();
-
+        console.log("city constructor")
     }
 
     loadModels() {
         let objLoader = new OBJLoader();
         let textureLoader = new THREE.TextureLoader()
 
-        //**------------textures-------------------------
+        //**------------textures-------------------------------------------------------------------------------------------------
         //building tex
         const glass_tex = textureLoader.load('/static/tex/building_glass_tex.jpg');
         const tex2 = textureLoader.load('/static/tex/building_tex_2.png');
@@ -25,7 +27,7 @@ export default class City {
         //sky tex
         const sky_tex = textureLoader.load('/static/tex/sky_tex.jpg');
 
-        //**------------materials------------------------
+        //**------------materials----------------------------------------------------------------------------------------------
         //building mat
         const glass_building_mat = new THREE.MeshStandardMaterial({ map: glass_tex });
         const building2_mat = new THREE.MeshStandardMaterial({ map: tex2 });
@@ -34,9 +36,6 @@ export default class City {
         const street_tex_mat = new THREE.MeshStandardMaterial({ map: street_tex });
         //ground mat
         const ground_mat = new THREE.MeshStandardMaterial({ map: ground_tex });
-        //sky mat
-        const sky_mat = new THREE.MeshStandardMaterial({ map: sky_tex,
-                                                                                    side: THREE.DoubleSide });
 
         //**--------------- ground and sky sphere -------------------------------------------------------------------------
         //ground
@@ -46,8 +45,7 @@ export default class City {
         this.plane.castShadow = false;
         this.plane.receiveShadow = true;
         this.scene.add(this.plane);
-
-        //sky sphere
+        this.global_scale = [2, 2, 2];
 
 
 
@@ -56,28 +54,39 @@ export default class City {
             '/static/obj/building_elliptical.obj',
             (object) => {
                 const objGeometries = [];
-                console.log("hiiii");
                 for (let i = 0; i < object.children.length; i++) {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(0.4,0.4,0.4);
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building1 = new THREE.Mesh(geometry, glass_building_mat);
-                this.scene.add(this.building1)
 
+                let building1_list = this.get_building1_positions();
+
+                for (let i=0; i<building1_list.length; i++) {
+                    const clone = this.building1.clone();
+                    console.log([building1_list[i][0], building1_list[i][1], building1_list[i][2]])
+                    clone.position.set(building1_list[i][0], building1_list[i][1], building1_list[i][2])
+                    this.scene.add(clone);
+                }
+
+                this.all.push(this.building1)
+                this.scene.add(this.building1)
+                console.log("building 1 loaded");
             }
         );
         objLoader.load(
             '/static/obj/building_bent.obj',
-            (object) => {
+            async (object) => {
                 const objGeometries = [];
                 for (let i = 0; i < object.children.length; i++) {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 5)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(30*this.global_scale[0], 0, 5*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building2 = new THREE.Mesh(geometry, building1_mat)
+
                 this.scene.add(this.building2)
 
             }
@@ -90,8 +99,8 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 35)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(30*this.global_scale[0], 0, 35*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building3 = new THREE.Mesh(geometry, building2_mat)
                 this.scene.add(this.building3);
             }
@@ -104,8 +113,8 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 65)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(30*this.global_scale[0], 0, 65*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building4 = new THREE.Mesh(geometry, building2_mat)
                 this.scene.add(this.building4);
             }
@@ -118,8 +127,8 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street1 = new THREE.Mesh(geometry, street_tex_mat)
                 this.scene.add(this.street1);
             }
@@ -132,8 +141,8 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street2 = new THREE.Mesh(geometry, street_tex_mat)
                 this.scene.add(this.street2);
             }
@@ -146,8 +155,8 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street3 = new THREE.Mesh(geometry, street_tex_mat)
                 this.scene.add(this.street3);
             }
@@ -160,13 +169,35 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12, 0.5, 12)
-                geometry.scale(0.4,0.4,0.4);
+                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street4 = new THREE.Mesh(geometry, street_tex_mat)
+                this.street4.castShadow = true;
                 this.scene.add(this.street4);
             }
         );
     }
-    
+
+    get_building1_positions() {
+        let positions = [];
+        let x, y, z = 0;
+        const offset = [-5, 0, 10];
+        //block1
+        for (let i=0; i<6; i++) {
+            for (let j=0; j<7; j++) {
+                x = (offset[0] + i*45) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j*25) * this.global_scale[2];
+                positions.push([x, y, z]);
+                console.log([x, y, z])
+            }
+        }
+
+        //block2
+
+        //block3
+        return positions;
+    }
+
 
 }
