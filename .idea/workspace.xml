@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/skinnedmesh.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/static/gltf/scene.bin" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/static/gltf/spider.gltf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ThreeManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ThreeManager.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/spider.js" afterDir="false" />
     </list>
@@ -23,6 +25,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -57,11 +62,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\froze\Desktop\CS 174C\174C-final-project\static\gltf" />
       <recent name="C:\Users\froze\Desktop\MIKU PROJECT\static\obj" />
       <recent name="C:\Users\froze\Desktop\MIKU PROJECT\src\morpher" />
       <recent name="C:\Users\froze\Desktop\MIKU PROJECT" />
       <recent name="C:\Users\froze\Desktop\MIKU PROJECT\static" />
-      <recent name="C:\Users\froze\Desktop\MIKU PROJECT\src\morpher\meshes" />
     </key>
   </component>
   <component name="SharedIndexes">
@@ -99,6 +104,7 @@
       <workItem from="1741580581506" duration="88000" />
       <workItem from="1741580671828" duration="3994000" />
       <workItem from="1741829799526" duration="18825000" />
+      <workItem from="1742030013557" duration="9432000" />
     </task>
     <servers />
   </component>

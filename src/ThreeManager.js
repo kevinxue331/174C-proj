@@ -182,8 +182,8 @@ export default class ThreeManager {
         );
 
         // SPIDER
-        //this.spider = new Spider();
-        //this.spider.addToScene(this.scene);
+        this.spider = new Spider();
+        this.spider.addToScene(this.scene);
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -198,7 +198,7 @@ export default class ThreeManager {
         requestAnimationFrame(this.animate.bind(this));
 
         // tick the spider
-        //this.spider.tick();
+        this.spider.tick();
 
         this.controls.update(0.02);
         if (this.player) this.player.update();
