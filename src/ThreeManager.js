@@ -50,17 +50,22 @@ export default class ThreeManager {
 
 
         //direction light
-        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
+        this.directionalLight = new THREE.DirectionalLight( 0xfcf4e6, 4);
         this.directionalLight.castShadow = true;
         this.directionalLight.position.set(-4, 30, -5);
-        this.directionalLight.shadow.mapSize.width = 512; // default
-        this.directionalLight.shadow.mapSize.height = 512; // default
+        this.directionalLight.shadow.mapSize.width = 22512;
+        this.directionalLight.shadow.mapSize.height = 22512;
         this.directionalLight.shadow.camera.near = 0.1; // default
         this.directionalLight.shadow.camera.far = 10000; // default
+
+        this.directionalLight.shadow.camera.top = 500;
+        this.directionalLight.shadow.camera.bottom = -500;
+        this.directionalLight.shadow.camera.left = 500;
+        this.directionalLight.shadow.camera.right = -500;
         this.scene.add( this.directionalLight );
 
         // light
-        const ambientLight = new THREE.AmbientLight(0xaaaaaa,0.3);
+        const ambientLight = new THREE.AmbientLight(0xcce0ff,0.5);
         this.scene.add(ambientLight);
         ambientLight.castShadow = false;
 
@@ -73,7 +78,7 @@ export default class ThreeManager {
             side: THREE.DoubleSide,
             emissiveMap: sky_tex,
             emissive: new THREE.Color(1, 1, 1),
-            emissiveIntensity: 0.8});
+            emissiveIntensity: 1.22});
 
         const sphereGeo = new THREE.IcosahedronGeometry(10, 4);
         this.sky = new THREE.Mesh(sphereGeo, sky_mat)
@@ -126,6 +131,8 @@ export default class ThreeManager {
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
                 const mesh = new THREE.Mesh(geo, kirby_mat);
+                mesh.castShadow = true;
+                mesh.receiveShadowShadow = true;
                 this.player.addBodyPart(mesh);
             }
         );
@@ -136,6 +143,8 @@ export default class ThreeManager {
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
                 const mesh = new THREE.Mesh(geo, kirby_mat);
+                mesh.castShadow = true;
+                mesh.receiveShadowShadow = true;
                 this.player.addBodyPart(mesh);
             }
         );
@@ -146,6 +155,8 @@ export default class ThreeManager {
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
                 const mesh = new THREE.Mesh(geo, kirby_mat);
+                mesh.castShadow = true;
+                mesh.receiveShadowShadow = true;
                 this.player.addBodyPart(mesh);
             }
         );
@@ -156,6 +167,8 @@ export default class ThreeManager {
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
                 const mesh = new THREE.Mesh(geo, kirby_mat);
+                mesh.castShadow = true;
+                mesh.receiveShadowShadow = true;
                 this.player.addBodyPart(mesh);
             }
         );

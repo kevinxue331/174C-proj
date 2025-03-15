@@ -39,13 +39,13 @@ export default class City {
 
         //**--------------- ground and sky sphere -------------------------------------------------------------------------
         //ground
-        const planeGeometry = new THREE.PlaneGeometry(800, 800, 20, 20);
+        const planeGeometry = new THREE.PlaneGeometry(500, 500, 20, 20);
         this.plane = new THREE.Mesh(planeGeometry, ground_mat);
         this.plane.rotation.x = -0.5 * Math.PI;
         this.plane.castShadow = false;
         this.plane.receiveShadow = true;
         this.scene.add(this.plane);
-        this.global_scale = [2, 2, 2];
+        this.global_scale = [1.7, 1.7, 1.7];
 
 
 
@@ -55,11 +55,15 @@ export default class City {
             (object) => {
                 const objGeometries = [];
                 for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.castShadow = true;
+                    objGeometries.receiveShadow = true;
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building1 = new THREE.Mesh(geometry, glass_building_mat);
+                this.building1.castShadow = true;
+                this.building1.receiveShadow = true;
 
                 let building1_list = this.get_building1_positions();
 
@@ -80,6 +84,8 @@ export default class City {
             async (object) => {
                 const objGeometries = [];
                 for (let i = 0; i < object.children.length; i++) {
+                    objGeometries.castShadow = true;
+                    objGeometries.receiveShadow = true;
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
