@@ -3,7 +3,8 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
-import SkinnedCylinder from "./skinnedmesh.js";
+import Player from './Player.js';
+import City from './city.js';
 
 const noise = new SimplexNoise();
 
@@ -16,95 +17,90 @@ export default class ThreeManager {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
         document.body.appendChild(this.renderer.domElement);
+        this.initPointerLock();
+        this.setupKeyListeners();
+        this.initCrosshair();
 
         this.cube = null;
+        this.player = null;
 
         this.init();
+        console.log("manager constructor")
     }
 
     // initialize objects, scene, camera, lights
     init() {
-        // Create a cube
+        // Create a cubea
+        /*
         const geometry = new THREE.BoxGeometry(5,5,5);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
         this.cube = new THREE.Mesh(geometry, material);
 
+         */
+
         // create a ball
+        /*
         const icosahedronGeometry = new THREE.IcosahedronGeometry(10, 4);
-        const lambertMaterial = new THREE.MeshLambertMaterial({
+        const lambertMaterial = new THREE.MeshStandardMaterial({
             color: 0xff00ee,
             wireframe: true
         });
-        this.ball = new THREE.Mesh(icosahedronGeometry, lambertMaterial);
-
-        // create planes
-        const planeGeometry = new THREE.PlaneGeometry(800, 800, 20, 20);
-        const planeMaterial = new THREE.MeshLambertMaterial({
-            color: 0x6904ce,
-            side: THREE.DoubleSide,
-            wireframe: false
-        });
-
-        //direction light
-
-        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 1000 );
-        this.directionalLight.castShadow = true;
-        this.directionalLight.position.set(0, 100, 1);
-
-        this.directionalLight.shadow.mapSize.width = 1512; // default
-        this.directionalLight.shadow.mapSize.height = 1512; // default
-        this.directionalLight.shadow.camera.near = 0.5; // default
-        this.directionalLight.shadow.camera.far = 5000; // default
-        this.scene.add( this.directionalLight );
-
-
-        let textureLoader = new THREE.TextureLoader()
-        const tex1 = textureLoader.load('/static/tex/building_glass_tex.jpg');
-        const tex2 = textureLoader.load('/static/tex/building_tex_2.png');
-        const tex3 = textureLoader.load('/static/tex/building_tex_1.jpg');
-        const textureMaterial1 = new THREE.MeshBasicMaterial({ map: tex1 });
-        const textureMaterial2 = new THREE.MeshBasicMaterial({ map: tex2 });
-        const textureMaterial3 = new THREE.MeshBasicMaterial({ map: tex3 });
-        const geo = new THREE.BoxGeometry(1, 1, 1);
-        this.cube = new THREE.Mesh(geo, textureMaterial2)
-        this.scene.add(this.cube)
-
-        this.plane = new THREE.Mesh(planeGeometry, textureMaterial3);
-        this.plane.rotation.x = -0.5 * Math.PI;
-        this.plane.position.set(0, 0, 0);
-        this.plane.castShadow = true;
-        this.plane.receiveShadow = true;
-
-
-        this.plane2 = new THREE.Mesh(planeGeometry, textureMaterial2);
-        this.plane2.rotation.x = -0.5 * Math.PI;
-        this.plane2.position.set(0, -45, 0);
-
-
-        // add objects to scene
-        //this.scene.add(this.plane);
-        this.scene.add(this.plane);
-        // this.scene.add(this.ball);
-
-        // light
-        //const ambientLight = new THREE.AmbientLight(0xaaaaaa,1);
-        //this.scene.add(ambientLight);
-        //ambientLight.castShadow = true;
-
-        /*
-        const spotLight = new THREE.SpotLight(0xffffff);
-        spotLight.intensity = 10000;
-        spotLight.position.set(-50, 0, 20);
-        spotLight.lookAt(this.ball);
-        spotLight.castShadow = true;
-        this.scene.add(spotLight);
 
          */
 
 
+        //direction light
+        this.directionalLight = new THREE.DirectionalLight( 0xffffff, 3 );
+        this.directionalLight.castShadow = true;
+        this.directionalLight.position.set(-4, 30, -5);
+        this.directionalLight.shadow.mapSize.width = 512; // default
+        this.directionalLight.shadow.mapSize.height = 512; // default
+        this.directionalLight.shadow.camera.near = 0.1; // default
+        this.directionalLight.shadow.camera.far = 10000; // default
+        this.scene.add( this.directionalLight );
+
+        // light
+        const ambientLight = new THREE.AmbientLight(0xaaaaaa,0.3);
+        this.scene.add(ambientLight);
+        ambientLight.castShadow = false;
+
+
+        let textureLoader = new THREE.TextureLoader()
+
+        //skysphere
+        const sky_tex = textureLoader.load('/static/tex/sky_tex.jpg');
+        const sky_mat = new THREE.MeshStandardMaterial({ map: sky_tex,
+            side: THREE.DoubleSide,
+            emissiveMap: sky_tex,
+            emissive: new THREE.Color(1, 1, 1),
+            emissiveIntensity: 0.8});
+
+        const sphereGeo = new THREE.IcosahedronGeometry(10, 4);
+        this.sky = new THREE.Mesh(sphereGeo, sky_mat)
+        this.sky.scale.set(40, 40, 40)
+        this.scene.add(this.sky);
+        this.sky.castShadow = false;
+        this.sky.receiveShadow = false;
+
+        //kirby tex
+        const kirby_tex = textureLoader.load('/static/tex/kirby.jpg');
+
+        //kirby mat
+        const kirby_mat = new THREE.MeshStandardMaterial({ map: kirby_tex });
+
+        /*
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        this.cube = new THREE.Mesh(geo, building2_mat)
+        this.scene.add(this.cube)
+         */
+
+        //draw city
+        this.city = new City(this.scene);
+
         // Camera position
         this.camera.position.z = 30;
         this.camera.position.y = 10;
+
         /*
         forward back left right (translate): WASD
         up down: R, F
@@ -117,119 +113,81 @@ export default class ThreeManager {
         this.controls.dragToLook = true;
 
 
-        // OBJ
         // OBJS
         let objLoader = new OBJLoader();
         this.geoList = [];
-        var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
+        //var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
+        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 });
 
         objLoader.load(
-            'static/obj/miku_lp.obj',
+            '/static/obj/kirby_torso.obj',
             (object) => {
-                // const geometry = object.children[0].geometry;
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(0.075,0.075,0.075)
-                const mesh = new THREE.Mesh(geometry, objMat);
-                this.shovel = mesh;
-                this.geoList.push(geometry.clone());
-                this.shovel.position.set(0, -5, 15);
-                //this.scene.add(this.shovel);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
-            'static/obj/aslkdjf.obj',
+            '/static/obj/kirby_torso.obj',
             (object) => {
-                // const geometry = object.children[0].geometry;
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(5.75,5.75,5.75);
-                this.geoList.push(geometry.clone());
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
-            '/static/obj/building_elliptical.obj',
+            '/static/obj/kirby_L_arm.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial1)
-                this.building = mesh;
-                this.building.castShadow = true;
-                this.building.receiveShadow = true;
-                // this.scene.add(this.building);
-
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
-            '/static/obj/building_bent.obj',
+            '/static/obj/kirby_R_arm.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 5)
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial3)
-                this.building2 = mesh;
-                this.building2.castShadow = true;
-                this.building2.receiveShadow = true;
-                // this.scene.add(this.building2);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
             }
         );
         objLoader.load(
-            '/static/obj/building_square_1.obj',
+            '/static/obj/kirby_L_foot.obj',
             (object) => {
-                const objGeometries = [];
-                for (let i = 0; i < object.children.length; i++) {
-                    objGeometries.push(object.children[i].geometry);
-                }
-                const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30, 0, 35)
-                geometry.scale(0.4,0.4,0.4);
-                const mesh = new THREE.Mesh(geometry, textureMaterial2)
-                this.building3 = mesh;
-                this.building3.castShadow = true;
-                this.building3.receiveShadow = true;
-                // this.scene.add(this.building3);
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
+            }
+        );
+        objLoader.load(
+            '/static/obj/kirby_R_foot.obj',
+            (object) => {
+                const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
+                geo.translate(0, 3, 0);
+                geo.scale(0.4, 0.4, 0.4);
+                const mesh = new THREE.Mesh(geo, kirby_mat);
+                this.player.addBodyPart(mesh);
+                console.log("kirby loaded");
             }
         );
 
-
-        //spotLight.lookAt(this.ball);
-        //this.building1.position.set(0.5, -30, 0.5)
         // SPIDER
-        this.spider = new Spider();
-        // this.spider.addToScene(this.scene);
-
-        // Create material
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-        // Instantiate skinned cylinder
-        const skinnedCylinder = new SkinnedCylinder(mat);
-
-        // Add to scene
-        this.scene.add(skinnedCylinder.getMesh());
-        skinnedCylinder.getMesh().position.y += 20;
-
-        // Rotate bones to test deformation
-        // skinnedCylinder.rotateBone(0, -0.2, 0, 0);
-        // skinnedCylinder.rotateBone(1, 0.4, 0, 0);
-        // skinnedCylinder.rotateBone(2, -0.2, 0, 0);
-        // this.skinnedmesh.init();
+        //this.spider = new Spider();
+        //this.spider.addToScene(this.scene);
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
+        console.log("end of init");
     }
 
     pcnt = 0;
@@ -239,48 +197,16 @@ export default class ThreeManager {
     animate() {
         requestAnimationFrame(this.animate.bind(this));
 
-        // Rotate the cube
-        this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
-
-        if(this.shovel != null) {
-            this.shovel.rotation.y += 0.01;
-            if(!this.paused) {
-                this.pcnt += 0.01;
-                let progress = Math.sin(this.pcnt)/2+0.5;
-                this.morphMesh(progress);
-                if(Math.round(progress*1000)/1000 == 0 || Math.round(progress*1000)/1000 == 1) {
-                    this.paused = true;
-                    //this.shovel.geometry.computeVertexNormals();
-                }
-            }
-            else {
-                this.pauseCounter++
-                if(this.pauseCounter >= 75 && this.pauseCounter < 100) {
-                    this.pcnt += 0.01;
-                    let progress = Math.sin(this.pcnt)/2+0.5;
-                    this.morphMesh(progress);
-                }
-                else if (this.pauseCounter >= 100) {
-                    this.paused = false;
-                    this.pauseCounter = 0;
-                }
-            }
-        }
-
-        // Rotate the ball
-        this.ball.rotation.x += 0.01;
-        this.ball.rotation.y += 0.01;
-
         // tick the spider
-        // this.spider.tick();
+        //this.spider.tick();
+
+        this.controls.update(0.02);
+        if (this.player) this.player.update();
 
 
-        //this.makeRoughGround(this.plane2, 1);
-
-        this.controls.update(0.02)
         this.renderer.render(this.scene, this.camera);
     }
+    
 
     start() {
         this.animate();
@@ -427,6 +353,93 @@ export default class ThreeManager {
     }
 
     _easeOutBack (x) { return 1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2); }
+
+    initPointerLock() {
+        const canvas = this.renderer.domElement;
+
+        // Add a click event listener to the canvas
+        const clickToStart = document.getElementById('click-to-start');
+        clickToStart.addEventListener('click', async () => {
+            try {
+                // Hide the click-to-start overlay
+
+                // Request pointer lock
+                await canvas.requestPointerLock();
+            } catch (err) {
+                console.error('Failed to enable pointer lock:', err);
+            }
+        });
+
+        // Listen for pointer lock change events
+        document.addEventListener('pointerlockchange', () => {
+            if (document.pointerLockElement === canvas) {
+                // Pointer is locked, start tracking mouse movement
+                document.addEventListener('mousemove', this.onMouseMove.bind(this));
+            } else {
+                // Pointer is unlocked, stop tracking mouse movement
+                document.removeEventListener('mousemove', this.onMouseMove.bind(this));
+            }
+        });
+    }
+    onMouseMove(event) {
+        if (!this.player) return;
+
+        const deltaX = event.movementX || event.mozMovementX || 0;
+        const deltaY = event.movementY || event.mozMovementY || 0;
+
+        
+
+        // Update the player's camera rotation based on mouse movement
+        this.player.updateCameraRotation(deltaX, deltaY);
+    }
+    setupKeyListeners() {
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                this.enableFullscreenAndHideCursor();
+            }
+            if (event.key === 'Escape') {
+                this.exitFullscreen();
+            }
+        });
+    }
+
+    enableFullscreenAndHideCursor() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        }
+
+        // Lock the pointer (hide cursor)
+        document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+        if (document.body.requestPointerLock) {
+            document.body.requestPointerLock();
+        }
+    }
+    exitFullscreen() {
+        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+            // Exit fullscreen
+            document.exitFullscreen && document.exitFullscreen();
+            document.mozCancelFullScreen && document.mozCancelFullScreen();
+            document.webkitExitFullscreen && document.webkitExitFullscreen();
+            document.msExitFullscreen && document.msExitFullscreen();
+
+            // Release the pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            }
+        }
+    }
+    initCrosshair() {
+        const crosshair = document.createElement("div");
+        crosshair.id = "crosshair";
+        document.body.appendChild(crosshair);
+    }
+    
 
 
 }
