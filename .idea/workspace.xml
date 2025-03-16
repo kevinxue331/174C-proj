@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/neg-x.bmp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/neg-y.bmp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/neg-z.bmp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/pos-x.bmp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/pos-y.bmp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/tex/skybox/pos-z.bmp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ThreeManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ThreeManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/spider.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,9 +101,7 @@
       <workItem from="1741580581506" duration="88000" />
       <workItem from="1741580671828" duration="3994000" />
       <workItem from="1741829799526" duration="18825000" />
-      <workItem from="1742030013557" duration="17158000" />
-      <workItem from="1742090122812" duration="2101000" />
-      <workItem from="1742093128106" duration="624000" />
+      <workItem from="1742030013557" duration="16801000" />
     </task>
     <servers />
   </component>

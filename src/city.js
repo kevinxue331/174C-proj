@@ -69,7 +69,6 @@ export default class City {
 
                 for (let i=0; i<building1_list.length; i++) {
                     const clone = this.building1.clone();
-                    console.log([building1_list[i][0], building1_list[i][1], building1_list[i][2]])
                     clone.position.set(building1_list[i][0], building1_list[i][1], building1_list[i][2])
                     this.scene.add(clone);
                 }
@@ -89,9 +88,18 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(30*this.global_scale[0], 0, 5*this.global_scale[0])
+                //geometry.translate(30*this.global_scale[0], 0, 5*this.global_scale[0])
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.building2 = new THREE.Mesh(geometry, building1_mat)
+
+                let building2_list = this.get_building2_positions();
+
+                for (let i=0; i<building2_list.length; i++) {
+                    const clone = this.building2.clone();
+                    clone.position.set(building2_list[i][0], building2_list[i][1], building2_list[i][2])
+                    clone.rotation.y = Math.random() * Math.PI * 2;
+                    this.scene.add(clone);
+                }
 
                 this.scene.add(this.building2)
 
@@ -133,9 +141,22 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                //geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street1 = new THREE.Mesh(geometry, street_tex_mat)
+                this.street1.receiveShadow = true;
+
+                let street1_list = this.get_road1_positions();
+
+                for (let i=0; i<street1_list.length; i++) {
+                    const clone = this.street1.clone();
+                    //clone.rotation.y = street1_list[i][1][1];
+                    clone.position.set(street1_list[i][0][0], street1_list[i][0][1], street1_list[i][0][2]);
+                    //clone.rotateX(street1_list[i][1][0]);
+                    clone.rotation.y = street1_list[i][1][1];
+                    //clone.rotation.z = street1_list[i][1][2];
+                    this.scene.add(clone);
+                }
                 this.scene.add(this.street1);
             }
         );
@@ -147,7 +168,7 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                //geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street2 = new THREE.Mesh(geometry, street_tex_mat)
                 this.scene.add(this.street2);
@@ -161,7 +182,7 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                //geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street3 = new THREE.Mesh(geometry, street_tex_mat)
                 this.scene.add(this.street3);
@@ -175,7 +196,7 @@ export default class City {
                     objGeometries.push(object.children[i].geometry);
                 }
                 const geometry = BufferGeometryUtils.mergeGeometries(objGeometries, false);
-                geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
+                //geometry.translate(12*this.global_scale[0], 0.5, 12*this.global_scale[0])
                 geometry.scale(this.global_scale[0], this.global_scale[1], this.global_scale[2]);
                 this.street4 = new THREE.Mesh(geometry, street_tex_mat)
                 this.street4.castShadow = true;
@@ -189,13 +210,58 @@ export default class City {
         let x, y, z = 0;
         const offset = [-5, 0, 10];
         //block1
-        for (let i=0; i<6; i++) {
-            for (let j=0; j<7; j++) {
-                x = (offset[0] + i*45) * this.global_scale[0];
+        for (let i = 0; i < 6; i++) {
+            for (let j = 0; j < 7; j++) {
+                x = (offset[0] + i * 45) * this.global_scale[0];
                 y = (offset[1]) * this.global_scale[1];
-                z = (offset[2] + j*25) * this.global_scale[2];
+                z = (offset[2] + j * 25) * this.global_scale[2];
                 positions.push([x, y, z]);
-                console.log([x, y, z])
+            }
+        }
+        return positions;
+    }
+    get_building2_positions() {
+        let positions = [];
+        let x, y, z = 0;
+        const offset = [-50, 0, -14];
+        //block1
+        for (let i = 0; i < 2; i++) {
+            for (let j = 0; j < 3; j++) {
+                x = (offset[0] + i * 60) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * 50) * this.global_scale[2];
+                positions.push([x, y, z]);
+            }
+        }
+        return positions;
+    }
+
+    get_road1_positions() {
+        let positions = [];
+
+        //block 1
+        for (let i = 0; i < 6; i++) {
+            let x, y, z = 0;
+            let rx, ry, rz = 0;
+            const offset = [22, 0.02, 24];
+            for (let j = 0; j < 5; j++) {
+                x = (offset[0] + i * 7.48) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * 25) * this.global_scale[2];
+                ry = Math.PI * 2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
+        for (let i = 0; i < 2; i++) {
+            let x, y, z = 0;
+            let rx, ry, rz = 0;
+            const offset = [23, 0.02, 40];
+            for (let j = 0; j < 10; j++) {
+                x = (offset[0] + i*53) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * 7.48) * this.global_scale[2];
+                ry = Math.PI / 2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
             }
         }
 
