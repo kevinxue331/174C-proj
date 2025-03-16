@@ -122,7 +122,7 @@ export default class ThreeManager {
         let objLoader = new OBJLoader();
         this.geoList = [];
         //var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
-        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 });
+        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 }, this.renderer.domElement);
 
         objLoader.load(
             '/static/obj/kirby_torso.obj',
@@ -214,7 +214,7 @@ export default class ThreeManager {
         this.spider.tick();
 
         this.controls.update(0.02);
-        if (this.player) this.player.update();
+        if (this.player) this.player.update(0.02);
 
 
         this.renderer.render(this.scene, this.camera);

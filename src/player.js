@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { FlyControls } from 'three/examples/jsm/controls/FlyControls.js';
 
 export default class Player {
-    constructor(scene, camera, position = { x: 0, y: 3, z: 0 }) {
+    constructor(scene, camera, position = { x: 0, y: 3, z: 0 }, renderer) {
         this.scene = scene;
         this.camera = camera;
         this.velocity = new THREE.Vector3();
@@ -33,6 +34,12 @@ export default class Player {
         this.cameraDistance = 5;
         this.cameraHeight = 2;
 
+        this.flyControls = new FlyControls(this.camera, renderer);
+        this.flyControls.movementSpeed = 0.3;
+        this.flyControls.rollSpeed = Math.PI / 3;
+        this.flyControls.autoForward = false;
+        this.flyControls.enabled = false; // Start disabled
+
         this.initListeners();
     }
 
@@ -49,6 +56,7 @@ export default class Player {
             this.shootRope(); // Shoot rope
         });
         
+        
     }
     createRope(start, end) {
         const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
@@ -60,7 +68,7 @@ export default class Player {
         setTimeout(() => this.scene.remove(rope), 3000); // Remove rope after 3s
     }
     shootRope() {
-        const maxLength = 20; // Maximum rope length
+        const maxLength = 50; // Maximum rope length
         const ropeStartY = 2;
         const direction = new THREE.Vector3();
         let ropeStart = this.kirby.position.clone();
@@ -94,6 +102,22 @@ export default class Player {
                     this.onGround = false;
                 }
                 break;
+            case 'KeyP': // Toggle Debug Mode
+                if (isPressed) {
+                    this.toggleDebugMode();
+                }
+                break;
+        }
+    }
+
+    toggleDebugMode() {
+        this.debugMode = !this.debugMode;
+        this.flyControls.enabled = this.debugMode;
+
+        if (this.debugMode) {
+            console.log("Debug Mode ON: FlyControls enabled");
+        } else {
+            console.log("Debug Mode OFF: Returning to normal movement");
         }
     }
 
@@ -142,7 +166,13 @@ export default class Player {
         document.body.requestPointerLock();
     }
 
-    update() {
+    update(delta) {
+
+        if (this.debugMode) {
+            this.flyControls.update(delta); // Update FlyControls if enabled
+            return;
+        }
+
         // Calculate the camera's offset from Kirby based on its rotation
         const offset = new THREE.Vector3(0, 0, this.cameraDistance);
         offset.applyQuaternion(this.camera.quaternion);
