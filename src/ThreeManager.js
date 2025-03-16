@@ -20,12 +20,20 @@ export default class ThreeManager {
         this.initPointerLock();
         this.setupKeyListeners();
         this.initCrosshair();
+        this.score = 0;
+        this.scoreboard = document.getElementById('scoreboard');
+        this.tick = 0;
 
         this.cube = null;
         this.player = null;
 
         this.init();
         console.log("manager constructor")
+    }
+
+    updateScore(amt) {
+        this.score += amt;
+        this.scoreboard.textContent = `Score: ${this.score}`;
     }
 
     // initialize objects, scene, camera, lights
@@ -207,6 +215,10 @@ export default class ThreeManager {
     // runs every frame
     animate() {
         requestAnimationFrame(this.animate.bind(this));
+        this.tick++;
+        if(this.tick%10 ==0){
+            this.updateScore(100);
+        }
 
         // tick the spider
         this.spider.tick();
@@ -228,6 +240,8 @@ export default class ThreeManager {
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
+
+    
 
     // TextManager functions
     // 歌詞の更新

@@ -4,6 +4,9 @@
 <head>
     <title>Kirby Escape</title>
     <link rel="stylesheet" href="index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -15,7 +18,16 @@
             font-size: 24px;
             color: white;
             cursor: pointer;
-            z-index: 10; /* Ensure it's above the canvas */
+            z-index: 10;
+        }
+        #scoreboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            font-family: "Nunito", sans-serif;
+            font-style: normal;
         }
     </style>
 </head>
@@ -27,8 +39,9 @@
     <script src='https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.3.0/simplex-noise.min.js'></script>
     </script>
 
-    <div id="click-to-start">
-    </div>
+    <div id="click-to-start"></div>
+    
+    <div id="scoreboard">Score: 0</div>
 
     <script type="importmap">
         {
