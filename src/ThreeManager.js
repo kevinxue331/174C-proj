@@ -72,20 +72,17 @@ export default class ThreeManager {
 
         let textureLoader = new THREE.TextureLoader()
 
-        //skysphere
-        const sky_tex = textureLoader.load('/static/tex/sky_tex.jpg');
-        const sky_mat = new THREE.MeshStandardMaterial({ map: sky_tex,
-            side: THREE.DoubleSide,
-            emissiveMap: sky_tex,
-            emissive: new THREE.Color(1, 1, 1),
-            emissiveIntensity: 1.22});
-
-        const sphereGeo = new THREE.IcosahedronGeometry(10, 4);
-        this.sky = new THREE.Mesh(sphereGeo, sky_mat)
-        this.sky.scale.set(40, 40, 40)
-        this.scene.add(this.sky);
-        this.sky.castShadow = false;
-        this.sky.receiveShadow = false;
+        //skybox
+        const cubetexture_loader = new THREE.CubeTextureLoader();
+        const skybox_texture = cubetexture_loader.load([
+            'static/tex/skybox/pos-x.bmp',
+            'static/tex/skybox/neg-x.bmp',
+            'static/tex/skybox/pos-y.bmp',
+            'static/tex/skybox/neg-y.bmp',
+            'static/tex/skybox/pos-z.bmp',
+            'static/tex/skybox/neg-z.bmp',
+        ]);
+        this.scene.background = skybox_texture;
 
         //kirby tex
         const kirby_tex = textureLoader.load('/static/tex/kirby.jpg');
