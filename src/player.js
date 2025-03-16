@@ -20,7 +20,7 @@ export default class Player {
             springConstant: 0.04, // Strength of the spring force
             damping: 0.9, // Damping to reduce oscillations
             rope: null, // Reference to the rope object
-            timeout: 0.5, // how long grappling hook should survive for
+            timeout: 2, // how long grappling hook should survive for
             maxDistance: 100
         };
 
@@ -80,11 +80,12 @@ export default class Player {
         // Store the rope reference for later removal
         this.grapplingHook.rope = rope;
 
-        // Remove rope after 7 seconds (or when the grappling hook is deactivated)
+        // Remove rope after timeout seconds (or when the grappling hook is deactivated)
         setTimeout(() => {
             if (this.grapplingHook.rope) {
                 this.scene.remove(this.grapplingHook.rope);
                 this.grapplingHook.rope = null;
+                this.deactivateGrapplingHook();
             }
         }, this.grapplingHook.timeout * 1000);
     }
@@ -113,21 +114,27 @@ export default class Player {
 
     applySpringForce() {
         if (!this.grapplingHook.isActive || !this.grapplingHook.targetPoint) return;
-
+    
         // Calculate the vector from Kirby to the target point
         const springForce = new THREE.Vector3()
             .subVectors(this.grapplingHook.targetPoint, this.kirby.position)
             .multiplyScalar(this.grapplingHook.springConstant);
-
+    
         // Apply damping to reduce oscillations
         springForce.sub(this.velocity.clone().multiplyScalar(this.grapplingHook.damping));
-
+    
         // Apply the spring force to Kirby's acceleration
         this.acceleration.add(springForce);
-
+    
         // Check if Kirby is close enough to the target point to deactivate the grappling hook
         const distanceToTarget = this.kirby.position.distanceTo(this.grapplingHook.targetPoint);
-        if (distanceToTarget < 1) {
+        if (distanceToTarget < 0.5) { // Threshold distance to deactivate
+            console.log("Disabling grappling hook");
+    
+            // Snap Kirby to the target point
+            this.kirby.position.copy(this.grapplingHook.targetPoint);
+    
+            // Deactivate the grappling hook
             this.deactivateGrapplingHook();
         }
     }
@@ -135,7 +142,11 @@ export default class Player {
     deactivateGrapplingHook() {
         this.grapplingHook.isActive = false;
         this.grapplingHook.targetPoint = null;
-
+    
+        // Reset velocity and acceleration to prevent lingering movement
+        this.velocity.set(0, 0, 0);
+        this.acceleration.set(0, 0, 0);
+    
         // Remove the rope
         if (this.grapplingHook.rope) {
             this.scene.remove(this.grapplingHook.rope);
