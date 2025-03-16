@@ -167,6 +167,7 @@ export default class ThreeManager {
                 mesh.castShadow = true;
                 mesh.receiveShadowShadow = true;
                 this.player.addBodyPart(mesh);
+                this.player.addRArm(mesh);
             }
         );
         objLoader.load(

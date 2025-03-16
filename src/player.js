@@ -12,6 +12,7 @@ export default class Player {
         this.jumpForce = 0.8;
         this.gravity = -0.02;
         this.onGround = false;
+        this.rArm = null;
 
         // Grappling hook properties
         this.grapplingHook = {
@@ -58,6 +59,10 @@ export default class Player {
         this.initListeners();
     }
 
+    addRArm(mesh){
+        this.rArm = mesh;
+    }
+
     addBodyPart(mesh) {
         this.kirby.add(mesh);
     }
@@ -72,8 +77,23 @@ export default class Player {
         });
     }
 
+    createCrosshair(position) {
+        const crosshairMaterial = new THREE.SpriteMaterial({
+            color: 0xff00ff, // Pink color
+            map: new THREE.TextureLoader().load('/static/tex/spiderweb_4.png'),
+            transparent: true
+        });
+        const crosshair = new THREE.Sprite(crosshairMaterial);
+        crosshair.scale.set(5, 5, 5); // Adjust size
+        crosshair.position.copy(position);
+        this.scene.add(crosshair);
+    
+        // Store the crosshair reference for later removal
+        this.grapplingHook.crosshair = crosshair;
+    }
+
     createRope(start, end) {
-        const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
         const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
         const rope = new THREE.Line(geometry, material);
     
@@ -113,6 +133,7 @@ export default class Player {
     
             // Create the rope
             this.createRope(ropeStart, this.grapplingHook.targetPoint);
+            this.createCrosshair(this.grapplingHook.targetPoint);
         }
     }
 
@@ -175,6 +196,10 @@ export default class Player {
         if (this.grapplingHook.rope) {
             this.scene.remove(this.grapplingHook.rope);
             this.grapplingHook.rope = null;
+        }
+        if(this.grapplingHook.crosshair){
+            this.scene.remove(this.grapplingHook.crosshair);
+            this.grapplingHook.crosshair = null;
         }
     }
 
