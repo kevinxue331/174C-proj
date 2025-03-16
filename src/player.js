@@ -8,17 +8,28 @@ export default class Player {
         this.velocity = new THREE.Vector3();
         this.acceleration = new THREE.Vector3();
         this.speed = 0.1;
-        this.maxSpeed = 0.5; // Maximum velocity
-        this.jumpForce = 0.8; // Force applied when jumping
+        this.maxSpeed = 0.5;
+        this.jumpForce = 0.8;
         this.gravity = -0.02;
         this.onGround = false;
+
+        // Grappling hook properties
+        this.grapplingHook = {
+            isActive: false, // Whether the grappling hook is active
+            targetPoint: null, // The point where the rope intersects
+            springConstant: 0.04, // Strength of the spring force
+            damping: 0.9, // Damping to reduce oscillations
+            rope: null, // Reference to the rope object
+            timeout: 0.5, // how long grappling hook should survive for
+            maxDistance: 100
+        };
 
         // Create Kirby's mesh
         this.kirby = new THREE.Group();
         this.kirby.position.set(position.x, position.y, position.z);
         this.scene.add(this.kirby);
 
-        this.camera.lookAt(this.kirby.position); // initially look at kirby
+        this.camera.lookAt(this.kirby.position); // Initially look at Kirby
 
         this.keys = {
             forward: false,
@@ -66,29 +77,70 @@ export default class Player {
 
         this.scene.add(rope);
 
-        setTimeout(() => this.scene.remove(rope), 3000); // Remove rope after 3s
+        // Store the rope reference for later removal
+        this.grapplingHook.rope = rope;
+
+        // Remove rope after 7 seconds (or when the grappling hook is deactivated)
+        setTimeout(() => {
+            if (this.grapplingHook.rope) {
+                this.scene.remove(this.grapplingHook.rope);
+                this.grapplingHook.rope = null;
+            }
+        }, this.grapplingHook.timeout * 1000);
     }
 
     shootRope() {
-        const maxLength = 50; // Maximum rope length
+        const maxLength = this.grapplingHook.maxDistance; // Maximum rope length
         const ropeStartY = 2;
         const direction = new THREE.Vector3();
         let ropeStart = this.kirby.position.clone();
-        ropeStart.y = ropeStart.y + ropeStartY; // move rope up a bit so it looks like its coming from kirby
+        ropeStart.y = ropeStart.y + ropeStartY; // Move rope up a bit so it looks like it's coming from Kirby
 
         this.camera.getWorldDirection(direction); // Get camera's forward direction
 
         const raycaster = new THREE.Raycaster(ropeStart, direction.normalize(), 0, maxLength);
         const intersects = raycaster.intersectObjects(this.scene.children, true); // Check for collisions
 
-        let ropeEnd;
         if (intersects.length > 0) {
-            ropeEnd = intersects[0].point; // Stop at first collision
-        } else {
-            ropeEnd = this.kirby.position.clone().addScaledVector(direction, maxLength); // Max length reached
-        }
+            // Activate the grappling hook
+            this.grapplingHook.isActive = true;
+            this.grapplingHook.targetPoint = intersects[0].point.clone(); // Store the intersection point
 
-        this.createRope(ropeStart, ropeEnd);
+            // Create the rope
+            this.createRope(ropeStart, this.grapplingHook.targetPoint);
+        }
+    }
+
+    applySpringForce() {
+        if (!this.grapplingHook.isActive || !this.grapplingHook.targetPoint) return;
+
+        // Calculate the vector from Kirby to the target point
+        const springForce = new THREE.Vector3()
+            .subVectors(this.grapplingHook.targetPoint, this.kirby.position)
+            .multiplyScalar(this.grapplingHook.springConstant);
+
+        // Apply damping to reduce oscillations
+        springForce.sub(this.velocity.clone().multiplyScalar(this.grapplingHook.damping));
+
+        // Apply the spring force to Kirby's acceleration
+        this.acceleration.add(springForce);
+
+        // Check if Kirby is close enough to the target point to deactivate the grappling hook
+        const distanceToTarget = this.kirby.position.distanceTo(this.grapplingHook.targetPoint);
+        if (distanceToTarget < 1) {
+            this.deactivateGrapplingHook();
+        }
+    }
+
+    deactivateGrapplingHook() {
+        this.grapplingHook.isActive = false;
+        this.grapplingHook.targetPoint = null;
+
+        // Remove the rope
+        if (this.grapplingHook.rope) {
+            this.scene.remove(this.grapplingHook.rope);
+            this.grapplingHook.rope = null;
+        }
     }
 
     handleKey(event, isPressed) {
@@ -99,7 +151,7 @@ export default class Player {
             case 'KeyD': this.keys.right = isPressed; break;
             case 'Space':
                 if (isPressed && this.onGround) {
-                    this.velocity.y = this.jumpForce; // Apply jump force as an impulse
+                    this.velocity.y = this.jumpForce; // Apply jump force
                     this.onGround = false;
                 }
                 break;
@@ -150,7 +202,6 @@ export default class Player {
 
     handleMouseMove(event) {
         if (document.pointerLockElement === document.body) {
-            // Use movementX/Y which gives delta from last position regardless of screen boundaries
             const deltaX = event.movementX || 0;
             const deltaY = event.movementY || 0;
 
@@ -171,37 +222,42 @@ export default class Player {
             this.flyControls.update(delta); // Update FlyControls if enabled
             return;
         }
-    
+
         // Reset acceleration
         this.acceleration.set(0, 0, 0);
-    
+
         // Calculate movement direction based on camera orientation
         const movementDirection = new THREE.Vector3();
-    
+
         if (this.keys.forward) movementDirection.z -= 1;
         if (this.keys.backward) movementDirection.z += 1;
         if (this.keys.left) movementDirection.x -= 1;
         if (this.keys.right) movementDirection.x += 1;
-    
+
         // Normalize the movement direction to ensure consistent speed
         movementDirection.normalize();
-    
+
         // Rotate the movement direction to align with the camera's orientation
         movementDirection.applyQuaternion(this.camera.quaternion);
-    
+
         // Project the movement direction onto the XZ plane (ignore Y component)
         movementDirection.y = 0;
         movementDirection.normalize(); // Re-normalize after projection
-    
+
         // Apply movement force
         this.acceleration.add(movementDirection.multiplyScalar(this.speed));
-    
+
         // Apply gravity
         this.acceleration.y += this.gravity;
-    
+
+        // Apply spring force if grappling hook is active
+        if (this.grapplingHook.isActive) {
+            this.applySpringForce();
+        }
+
         // Update velocity based on acceleration
         this.velocity.add(this.acceleration);
-    
+
         // Clamp horizontal velocity to maximum speed
         const horizontalVelocity = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
         if (horizontalVelocity.length() > this.maxSpeed) {
@@ -209,31 +265,31 @@ export default class Player {
             this.velocity.x = horizontalVelocity.x;
             this.velocity.z = horizontalVelocity.z;
         }
-    
+
         // Move Kirby
         this.kirby.position.add(this.velocity);
-    
+
         // Rotate Kirby to face the movement direction
         if (movementDirection.x !== 0 || movementDirection.z !== 0) {
             const targetAngle = Math.atan2(movementDirection.x, movementDirection.z) - Math.PI / 2;
             this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
         }
-    
+
         // Simple ground collision
         if (this.kirby.position.y <= 0) {
             this.kirby.position.y = 0;
             this.velocity.y = 0;
             this.onGround = true;
         }
-    
+
         // Apply drag (deceleration) to horizontal movement only
         this.velocity.x *= 0.9;
         this.velocity.z *= 0.9;
-    
+
         // Update camera position to stay behind and above Kirby
         const cameraOffset = new THREE.Vector3(0, this.cameraHeight, this.cameraDistance);
         cameraOffset.applyQuaternion(this.camera.quaternion); // Align offset with camera's rotation
-    
+
         // Set the camera's position relative to Kirby
         this.camera.position.copy(this.kirby.position).add(cameraOffset);
     }
