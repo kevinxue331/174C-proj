@@ -6,6 +6,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 export default class City {
     constructor(scene) {
         this.scene = scene;
+        //ideal global scale: 2.6
         this.global_scale = [2.6, 2.6, 2.6];
         this.objLoader = new OBJLoader();
         this.textureLoader = new THREE.TextureLoader();
@@ -28,6 +29,7 @@ export default class City {
             tex2: this.textureLoader.load('/static/tex/building_tex_2.png'),
             tex3: this.textureLoader.load('/static/tex/building_tex_1.jpg'),
             concrete: this.textureLoader.load('/static/tex/concrete_tex.jpg'),
+            crate: this.textureLoader.load('/static/tex/crate_tex.jpg'),
             shed: this.textureLoader.load('/static/tex/shed_tex.jpg'),
             street: this.textureLoader.load('/static/tex/street_tex.jpg'),
             ground: this.textureLoader.load('/static/tex/ground_tex.jpg'),
@@ -40,6 +42,7 @@ export default class City {
             shed: new THREE.MeshStandardMaterial({ map: this.textures.shed }),
             street: new THREE.MeshStandardMaterial({ map: this.textures.street }),
             ground: new THREE.MeshStandardMaterial({ map: this.textures.ground }),
+            crate: new THREE.MeshStandardMaterial({ map: this.textures.crate }),
         };
     }
 
@@ -50,12 +53,13 @@ export default class City {
         this.loadModel('/static/obj/building_box.obj', this.materials.building1, this.get_building7_positions());
         this.loadModel('/static/obj/building_circle.obj', this.materials.concrete_building, this.get_building5_positions());
         this.loadModel('/static/obj/building_shed.obj', this.materials.shed, this.get_building6_positions());
-        this.loadModel('/static/obj/street_1.obj', this.materials.street, this.get_road1_positions());
-        this.loadModel('/static/obj/street_3.obj', this.materials.street, this.get_road3_positions());
-        this.loadModel('/static/obj/street_4.obj', this.materials.street, this.get_road4_positions());
+        this.loadModel('/static/obj/crate.obj', this.materials.crate, this.get_crate_positions());
+        this.loadModel('/static/obj/street_1.obj', this.materials.street, this.get_road1_positions(), true);
+        this.loadModel('/static/obj/street_3.obj', this.materials.street, this.get_road3_positions(), true);
+        this.loadModel('/static/obj/street_4.obj', this.materials.street, this.get_road4_positions(), true);
     }
 
-    loadModel(path, material, positions) {
+    loadModel(path, material, positions, isRoad=false) {
         this.objLoader.load(path, (object) => {
             const geometries = object.children.map(child => child.geometry);
             const geometry = BufferGeometryUtils.mergeGeometries(geometries, false);
@@ -69,6 +73,9 @@ export default class City {
                 const clone = mesh.clone();
                 clone.position.set(...pos);
                 clone.rotation.set(0, rot[1], 0);
+                if (isRoad == false) {
+                    clone.rotation.set(0, rot[1]+(Math.random()-0.5) * 0.1, 0);
+                }
                 clone.scale.set(1, 1 + (Math.random()-0.3) *0.8, 1)
                 this.scene.add(clone);
             });
@@ -98,6 +105,8 @@ export default class City {
 
         let positions = [
             [[a*48, 0, a*25], [0, pi+0.5, 0]],
+            [[a*-10, 0, a*-10], [0, pi/4, 0]],
+            [[a*-18, 0, a*24], [0, -pi, 0]],
             [[], []]
         ]
         return positions;
@@ -111,6 +120,8 @@ export default class City {
 
         let positions = [
             [[a*35, 0, a*17], [0, pi, 0]],
+            [[a*-10, 0, a*9], [0, pi, 0]],
+            [[a*-25, 0, a*9], [0, pi, 0]],
             [[], []]
         ]
         return positions;
@@ -123,7 +134,7 @@ export default class City {
         const pi = Math.PI;
 
         let positions = [
-            [[a*35, 0, a*52], [0, pi+0.5, 0]],
+            [[a*35 - 8, 0, a*52], [0, pi+0.5, 0]],
             [[], []]
         ]
         return positions;
@@ -136,15 +147,37 @@ export default class City {
         const pi = Math.PI;
 
         let positions = [
-            [[a*15, 0, a*52], [0, pi/2, 0]],
+            [[a*11, 0, a*52], [0, pi/2, 0]],
             [[a*55, 0, a*-2], [0, pi, 0]],
             [[a*35, 0, a*-2], [0, pi, 0]],
             [[], []]
         ]
+        for (let i=0; i<2; i++) {
+            let x, y, z = 0;
+            let rx, ry, rz = 0;
+            for (let j=0; j<4; j++) {
+                const offset = [7, 0, -12];
+                x = (offset[0] + i * width * 1.8) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] - j * width * 2.1) * this.global_scale[2];
+                ry = Math.PI/2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
+        for (let i=0; i<2; i++) {
+            let x, y, z = 0;
+            let rx, ry, rz = 0;
+            const offset = [40, 0, 80];
+            x = (offset[0] + i * width * 1.8) * this.global_scale[0];
+            y = (offset[1]) * this.global_scale[1];
+            z = (offset[2]) * this.global_scale[2];
+            ry = Math.PI/2;
+            positions.push([[x, y, z], [rx, ry, rz]]);
+        }
         return positions;
     }
     get_building7_positions() {
-        //Shed
+        //box building
         const a = this.global_scale[0];
         const width = 7.48;
         const pi = Math.PI;
@@ -154,7 +187,7 @@ export default class City {
 
         for (let i=0; i<4; i++) {
             for (let j=0; j<4; j++) {
-                const offset = [width * (-2), 0, width * 6];
+                const offset = [width * (-2) + 5, 0, width * 6];
                 x = (offset[0] - i * width * 1.8) * this.global_scale[0];
                 y = (offset[1]) * this.global_scale[1];
                 z = (offset[2] + j * width * 1.6) * this.global_scale[2];
@@ -169,6 +202,36 @@ export default class City {
                 y = (offset[1]) * this.global_scale[1];
                 z = (offset[2] - j * width * 1.6) * this.global_scale[2];
                 ry = Math.PI/2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
+        return positions;
+    }
+
+    get_crate_positions() {
+        //box building
+        const a = this.global_scale[0];
+        const width = 7.48;
+        const pi = Math.PI;
+        let x, y, z = 0;
+        let rx, ry, rz = 0;
+        let positions = [];
+
+        for (let i=0; i<4; i++) {
+            const offset = [6, 0, 28];
+            x = (offset[0] + i * width * 0.5) * this.global_scale[0];
+            y = (offset[1]) * this.global_scale[1];
+            z = (offset[2]) * this.global_scale[2];
+            ry = Math.PI/2;
+            positions.push([[x, y, z], [rx, ry, rz]]);
+        }
+        for (let i=0; i<2; i++) {
+            for (let j=0; j<4; j++) {
+                const offset = [48, 0, 46];
+                x = (offset[0]+ i * width * 1.4) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * width * 0.8) * this.global_scale[2];
+                ry = Math.PI;
                 positions.push([[x, y, z], [rx, ry, rz]]);
             }
         }
