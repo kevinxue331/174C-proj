@@ -4,6 +4,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
 import Player from './Player.js';
+import GameManager from './gamemanager.js';
 import City from './city.js';
 
 const noise = new SimplexNoise();
@@ -20,8 +21,9 @@ export default class ThreeManager {
         this.initPointerLock();
         this.setupKeyListeners();
         this.initCrosshair();
-        this.score = 0;
-        this.scoreboard = document.getElementById('scoreboard');
+        
+        this.gamemanager = null;
+
         this.tick = 0;
 
         this.cube = null;
@@ -129,6 +131,8 @@ export default class ThreeManager {
         //var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
         this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 }, this.renderer.domElement);
 
+        this.gamemanager = new GameManager(() => this.resetGame());
+
         objLoader.load(
             '/static/obj/kirby_torso.obj',
             (object) => {
@@ -217,7 +221,11 @@ export default class ThreeManager {
         requestAnimationFrame(this.animate.bind(this));
         this.tick++;
         if(this.tick%10 ==0){
-            this.updateScore(100);
+            this.gamemanager.updateScore(100);
+        }
+
+        if(this.tick%1000 ==0){ // TODO add proper game end logic
+            this.gamemanager.gameOver();
         }
 
         // tick the spider
@@ -230,6 +238,11 @@ export default class ThreeManager {
         this.renderer.render(this.scene, this.camera);
     }
     
+    resetGame(){
+        if (!this.player) return;
+        this.tick = 0;
+        this.player.reset();
+    }
 
     start() {
         this.animate();

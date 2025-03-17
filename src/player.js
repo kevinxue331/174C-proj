@@ -75,6 +75,16 @@ export default class Player {
         this.initListeners();
     }
 
+    reset(){
+        console.log("resetting kirby");
+        this.deactivateGrapplingHook();
+        this.kirby.position.set(0,0,0);
+        this.onGround = false;
+        this.velocity = new THREE.Vector3();
+        this.acceleration = new THREE.Vector3();
+
+    }
+
     addRArm(mesh){
         this.rArm = mesh;
     }

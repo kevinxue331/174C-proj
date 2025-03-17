@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/collisions.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/player.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/player.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/city.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/city.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +47,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/froze/Desktop/CS 174C/174C-final-project/static/tex/skybox&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/froze/Desktop/CS 174C/174C-final-project&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -59,9 +58,6 @@
   }
 }</component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\froze\Desktop\CS 174C\174C-final-project\static\tex\skybox" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\froze\Desktop\CS 174C\174C-final-project\static\gltf" />
       <recent name="C:\Users\froze\Desktop\MIKU PROJECT\static\obj" />
@@ -105,10 +101,7 @@
       <workItem from="1741580581506" duration="88000" />
       <workItem from="1741580671828" duration="3994000" />
       <workItem from="1741829799526" duration="18825000" />
-      <workItem from="1742030013557" duration="17158000" />
-      <workItem from="1742090122812" duration="2101000" />
-      <workItem from="1742093128106" duration="4443000" />
-      <workItem from="1742172888862" duration="7059000" />
+      <workItem from="1742030013557" duration="16801000" />
     </task>
     <servers />
   </component>

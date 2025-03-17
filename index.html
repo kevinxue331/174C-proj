@@ -10,25 +10,6 @@
     <style>
         body { margin: 0; }
         canvas { display: block; }
-        #click-to-start {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            z-index: 10;
-        }
-        #scoreboard {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 24px;
-            font-family: "Nunito", sans-serif;
-            font-style: normal;
-        }
     </style>
 </head>
 
@@ -42,6 +23,12 @@
     <div id="click-to-start"></div>
     
     <div id="scoreboard">Score: 0</div>
+
+    <div id="gameover">
+        <div>Game Over!</div>
+        <div>Final Score: <span id="final-score">0</span></div>
+        <div><span id="restart-text">Press "R" to Restart</span></div>
+    </div>
 
     <script type="importmap">
         {
