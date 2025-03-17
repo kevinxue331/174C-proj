@@ -16,7 +16,17 @@ export default class Player {
         this.walkCycle = 0;
         this.onGround = false;
         this.rArm = null;
-
+        //squish code
+        this.deformation = {
+            active: true,
+            squashStrength: 0.4,  
+            stretchStrength: 0.4, 
+            elasticity: 0.15,     
+            maxDeform: 0.5,      
+            defaultScale: new THREE.Vector3(1, 1, 1),
+            currentScale: new THREE.Vector3(1, 1, 1)
+        };
+        
         // collision flags
         this.isColliding = false;
         this.entryVelocity = new THREE.Vector3();
@@ -302,7 +312,65 @@ export default class Player {
 
         return force;
     }
-
+    applySquashAndStretch(delta) {
+        if (!this.deformation.active) return;
+        
+        const accelMagnitude = this.acceleration.length();
+        
+        
+        if (accelMagnitude < 0.05) {
+            this.deformation.currentScale.lerp(this.deformation.defaultScale, this.deformation.elasticity);
+            this.kirby.scale.copy(this.deformation.currentScale);
+            return;
+        }
+        
+       
+        const accelDir = this.acceleration.clone().normalize();
+        
+        
+        if (Math.abs(accelDir.y) > 0.7) {
+            // vertical deformation
+            if (accelDir.y > 0) {
+                const stretchFactor = 1 + (accelMagnitude * this.deformation.stretchStrength);
+                const squeezeFactor = 1 / Math.sqrt(stretchFactor);
+                
+                this.deformation.currentScale.set(
+                    squeezeFactor, 
+                    Math.min(stretchFactor, 1 + this.deformation.maxDeform), 
+                    squeezeFactor
+                );
+            } 
+            else {
+                const squashFactor = 1 - (accelMagnitude * this.deformation.squashStrength);
+                const bulgeFactor = 1 / Math.sqrt(squashFactor); 
+                
+                this.deformation.currentScale.set(
+                    Math.min(bulgeFactor, 1 + this.deformation.maxDeform),
+                    Math.max(squashFactor, 1 - this.deformation.maxDeform),
+                    Math.min(bulgeFactor, 1 + this.deformation.maxDeform)
+                );
+            }
+        } 
+        // horizontal movement
+        else {
+            const horizontalDir = new THREE.Vector3(accelDir.x, 0, accelDir.z).normalize();
+           
+            const localDir = horizontalDir.clone().applyQuaternion(
+                new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -this.kirby.rotation.y, 0))
+            );
+            const stretchFactor = 1 + (accelMagnitude * this.deformation.stretchStrength);
+            const squashFactor = 1 / Math.sqrt(stretchFactor); 
+            this.deformation.currentScale.set(
+                squashFactor,
+                squashFactor,
+                Math.min(stretchFactor, 1 + this.deformation.maxDeform)
+            );
+           
+        }
+        
+       
+        this.kirby.scale.copy(this.deformation.currentScale);
+    }
     deactivateGrapplingHook() {
         this.grapplingHook.isActive = false;
         this.grapplingHook.targetPoint = null;
@@ -430,7 +498,7 @@ export default class Player {
             if(collisionReturn.isColliding > this.isColliding) this.isColliding = collisionReturn.isColliding;
             if(this.isColliding) netForce.add(penaltyForce);
         }
-
+        this.applySquashAndStretch(dt);
 
         const restingThreshold = 0.01;
         const allowWallJump = true;
