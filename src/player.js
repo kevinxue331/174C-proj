@@ -65,6 +65,7 @@ export default class Player {
         this.flyControls.rollSpeed = Math.PI / 3;
         this.flyControls.autoForward = false;
         this.flyControls.enabled = false; // Start disabled
+<<<<<<< HEAD
 
         const geo = new THREE.BoxGeometry(50, 5, 50);
         const mat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
@@ -72,9 +73,24 @@ export default class Player {
         this.cube.position.copy(new THREE.Vector3(50,0,5))
         this.scene.add(this.cube)
 
+=======
+        this.walkCycle = 0;
+        this.walkSpeed = 5;
+        this.swingAnimation = 0;
+        this.debugMode = false;
+        
+        this.bodyParts = {
+            torso: null,
+            leftArm: null,
+            rightArm: null,
+            leftFoot: null,
+            rightFoot: null
+        };
+        
+>>>>>>> 2faccf2 (basic animations)
         this.initListeners();
     }
-
+    
     reset(){
         console.log("resetting kirby");
         this.deactivateGrapplingHook();
@@ -88,9 +104,87 @@ export default class Player {
     addRArm(mesh){
         this.rArm = mesh;
     }
-
     addBodyPart(mesh) {
         this.kirby.add(mesh);
+        
+        // Identify body parts by their geometry or name if possible
+        const name = mesh.geometry?.name || '';
+        
+        // Check if this mesh contains "L_arm" in the file path (based on how it was loaded)
+        if (name.includes('kirby_L_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_arm'))) {
+            this.bodyParts.leftArm = mesh;
+            console.log("Left arm attached");
+        } 
+        // Right arm (already tracked via addRArm)
+        else if (name.includes('kirby_R_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_arm'))) {
+            this.bodyParts.rightArm = mesh;
+            console.log("Right arm attached");
+        } 
+        // Left foot
+        else if (name.includes('kirby_L_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_foot'))) {
+            this.bodyParts.leftFoot = mesh;
+            console.log("Left foot attached");
+        } 
+        // Right foot
+        else if (name.includes('kirby_R_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_foot'))) {
+            this.bodyParts.rightFoot = mesh;
+            console.log("Right foot attached");
+        } 
+        // Torso
+        else if (name.includes('kirby_torso') || (mesh.userData && mesh.userData.filePath?.includes('kirby_torso'))) {
+            this.bodyParts.torso = mesh;
+            console.log("Torso attached");
+        }
+    }
+    animateLimbs(delta) {
+        const { leftArm, rightArm, leftFoot, rightFoot } = this.bodyParts;
+        
+        // Debug info
+        
+        
+        // Always increment walk cycle for testing
+        this.walkCycle += delta * 5;
+        
+        // Calculate movement speed (for animation speed)
+        const moveSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
+        
+        // Test animation to ensure arms move
+        if (leftArm) {
+            leftArm.rotation.set(
+                Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+            if (Math.random() < 0.01) console.log("Left arm rotating:", leftArm.rotation.x);
+        }
+        
+        if (rightArm && rightArm === this.rArm) {
+            // If this is the grappling hook arm, make sure it's being animated
+            rightArm.rotation.set(
+                Math.sin(this.walkCycle + Math.PI) * 0.01,  // X rotation (opposite of left arm)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                         // Y rotation
+                0                                          // Z rotation
+            );
+            if (Math.random() < 0.01) console.log("Right arm rotating:", rightArm.rotation.x);
+        }
+        if(leftFoot){
+            leftFoot.rotation.set(
+                0,  // X rotation (swinging forward/backward)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+        }
+        if(rightFoot){
+            rightFoot.rotation.set(
+                0,  // X rotation (opposite of left foot)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+        }
+        
+        // Rest of your animation can remain as is
+        
+    
     }
 
     initListeners() {
@@ -309,17 +403,112 @@ export default class Player {
 
         document.body.requestPointerLock();
     }
+<<<<<<< HEAD
 
     // called once a frame
     update(delta) {
         let sims_per_frame = 100; // number of physics simulations ran / second
         for(let t = 0; t < 1; t += 1/sims_per_frame) this.run(1/sims_per_frame);
+=======
+    debugBodyParts() {
+        console.log("Current body parts:", {
+            leftArm: this.bodyParts.leftArm ? "Found" : "Missing",
+            rightArm: this.bodyParts.rightArm ? "Found" : "Missing",
+            leftFoot: this.bodyParts.leftFoot ? "Found" : "Missing",
+            rightFoot: this.bodyParts.rightFoot ? "Found" : "Missing",
+            torso: this.bodyParts.torso ? "Found" : "Missing",
+            rArm: this.rArm ? "Found" : "Missing"
+        });
+    }
+    update(delta) {
+        //this.debugBodyParts();
+>>>>>>> 2faccf2 (basic animations)
 
         if (this.debugMode) {
             this.flyControls.update(delta); // Update FlyControls if enabled
             return;
         }
     
+<<<<<<< HEAD
+=======
+       
+        this.animateLimbs(delta);
+    
+        // Reset acceleration
+        this.acceleration.set(0, 0, 0);
+    
+        // Calculate movement direction based on camera orientation
+        const movementDirection = new THREE.Vector3();
+    
+        if (this.keys.forward) movementDirection.z -= 1;
+        if (this.keys.backward) movementDirection.z += 1;
+        if (this.keys.left) movementDirection.x -= 1;
+        if (this.keys.right) movementDirection.x += 1;
+    
+        // Normalize the movement direction to ensure consistent speed
+        movementDirection.normalize();
+    
+        // Rotate the movement direction to align with the camera's orientation
+        movementDirection.applyQuaternion(this.camera.quaternion);
+    
+        // Project the movement direction onto the XZ plane (ignore Y component)
+        movementDirection.y = 0;
+        movementDirection.normalize(); // Re-normalize after projection
+    
+        // Apply movement force
+        this.acceleration.add(movementDirection.multiplyScalar(this.speed));
+    
+        // Apply gravity
+        this.acceleration.y += this.gravity;
+    
+        // Apply spring force if grappling hook is active
+        if (this.grapplingHook.isActive) {
+            this.applySpringForce();
+    
+            // Update the rope's position
+            if (this.grapplingHook.rope) {
+                const ropeStart = this.kirby.position.clone();
+                ropeStart.y += 2; // Adjust for Kirby's height
+                const ropeEnd = this.grapplingHook.targetPoint.clone();
+    
+                // Update the rope's geometry
+                this.grapplingHook.rope.geometry.setFromPoints([ropeStart, ropeEnd]);
+                this.grapplingHook.rope.geometry.attributes.position.needsUpdate = true;
+            }
+        }
+    
+        // Update velocity based on acceleration
+        this.velocity.add(this.acceleration);
+    
+        // Clamp horizontal velocity to maximum speed
+        const horizontalVelocity = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
+        if (horizontalVelocity.length() > this.maxSpeed) {
+            horizontalVelocity.setLength(this.maxSpeed);
+            this.velocity.x = horizontalVelocity.x;
+            this.velocity.z = horizontalVelocity.z;
+        }
+    
+        // Move Kirby
+        this.kirby.position.add(this.velocity);
+    
+        // Rotate Kirby to face the movement direction
+        if (movementDirection.x !== 0 || movementDirection.z !== 0) {
+            const targetAngle = Math.atan2(movementDirection.x, movementDirection.z) - Math.PI / 2;
+            this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
+        }
+    
+        // Simple ground collision
+        if (this.kirby.position.y <= 0) {
+            this.kirby.position.y = 0;
+            this.velocity.y = 0;
+            this.onGround = true;
+        }
+    
+        // Apply drag (deceleration) to horizontal movement only
+        this.velocity.x *= 0.9;
+        this.velocity.z *= 0.9;
+    
+>>>>>>> 2faccf2 (basic animations)
         // Update camera position to stay behind and above Kirby
         const cameraOffset = new THREE.Vector3(0, this.cameraHeight, this.cameraDistance);
         cameraOffset.applyQuaternion(this.camera.quaternion); // Align offset with camera's rotation
