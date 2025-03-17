@@ -217,8 +217,11 @@ export default class ThreeManager {
         );
 
         // SPIDER
-        this.spider = new Spider(this.player, this.city.all);
+        this.spider = new Spider(this.player, this.city.all, true, 2);
         this.spider.addToScene(this.scene);
+
+        this.bigSpider = new Spider(this.player, this.city.all, false, 10, 0.5);
+        this.bigSpider.addToScene(this.scene);
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -242,6 +245,7 @@ export default class ThreeManager {
 
         // tick the spider
         this.spider.tick();
+        this.bigSpider.tick();
 
         this.controls.update(0.02);
         if (this.player) this.player.update(0.02);

@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { CCDIKSolver } from 'three/addons/animation/CCDIKSolver.js';
 
 export default class Spider {
-    constructor(player, collidables) {
+    constructor(player, collidables, canClimb = true, sizeScale = 1, speedFactor = 1.5) {
         this.initialized = false;
         this.root_bone_inverse_matrix = null;
         this.player = player;
@@ -12,6 +12,10 @@ export default class Spider {
         this.pitch = 0;
         this.climbing = false;
         this.climbTimer = 0;
+        this.canClimb = canClimb;
+
+        this.sizeScale = sizeScale;
+        this.speedScale = speedFactor
 
         this.upHelper = null;
         this.lookHelper = null;
@@ -274,6 +278,7 @@ export default class Spider {
     }
 
     getNextRestPosition(restPosWorld, collidables, lookVector, upVector, returnThreshold = 1.5) {
+        if(!this.canClimb) return restPosWorld;
         // Create a ray direction that is forward and upward at 30 degrees relative to the look vector
         const forwardVector = lookVector.clone().normalize();
         const upwardVector = upVector.clone().normalize();
@@ -291,7 +296,7 @@ export default class Spider {
         const intersects = raycaster.intersectObjects(collidables, true);
 
         // If there's an intersection and it's within the returnThreshold, return the intersection point
-        if (intersects.length > 0 && intersects[0].distance <= 1*returnThreshold) {
+        if (intersects.length > 0 && intersects[0].distance <= 0.75*returnThreshold) {
             this.climbing = true;
             this.climbTimer = 20;
             return intersects[0].point;
@@ -336,8 +341,8 @@ export default class Spider {
     tick() {
         if (!this.initialized || this.ikSolver == null) return;
 
-        const speedFactor = 1.5;
-        const sizeFactor = 2;
+        const speedFactor = this.speedScale;
+        const sizeFactor = this.sizeScale;
 
         this.spiderRoot.scale.set(sizeFactor, sizeFactor, sizeFactor);
 
