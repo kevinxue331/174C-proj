@@ -217,7 +217,7 @@ export default class ThreeManager {
         );
 
         // SPIDER
-        this.spider = new Spider(this.player);
+        this.spider = new Spider(this.player, this.city.all);
         this.spider.addToScene(this.scene);
 
         // Handling resize
