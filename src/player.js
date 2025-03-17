@@ -103,35 +103,33 @@ export default class Player {
         const name = mesh.geometry?.name || '';
         
         // Check if this mesh contains "L_arm" in the file path (based on how it was loaded)
-        if (name.includes('kirby_L_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_arm'))) {
+        if (name.includes('kirby_L_arm') ) {
             this.bodyParts.leftArm = mesh;
             console.log("Left arm attached");
         } 
         // Right arm (already tracked via addRArm)
-        else if (name.includes('kirby_R_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_arm'))) {
+        else if (name.includes('kirby_R_arm') ) {
             this.bodyParts.rightArm = mesh;
             console.log("Right arm attached");
         } 
         // Left foot
-        else if (name.includes('kirby_L_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_foot'))) {
+        else if (name.includes('kirby_L_foot') ) {
             this.bodyParts.leftFoot = mesh;
             console.log("Left foot attached");
         } 
         // Right foot
-        else if (name.includes('kirby_R_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_foot'))) {
+        else if (name.includes('kirby_R_foot') ) {
             this.bodyParts.rightFoot = mesh;
             console.log("Right foot attached");
         } 
         // Torso
-        else if (name.includes('kirby_torso') || (mesh.userData && mesh.userData.filePath?.includes('kirby_torso'))) {
+        else if (name.includes('kirby_torso') ) {
             this.bodyParts.torso = mesh;
             console.log("Torso attached");
         }
     }
     animateLimbs(delta) {
         const { leftArm, rightArm, leftFoot, rightFoot } = this.bodyParts;
-        
-        // Debug info
         
         
         // Always increment walk cycle for testing
@@ -140,40 +138,40 @@ export default class Player {
         // Calculate movement speed (for animation speed)
         const moveSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
         
-        // Test animation to ensure arms move
+       
+        if(moveSpeed>0.1){
         if (leftArm) {
             leftArm.rotation.set(
-                Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
+                Math.sin(this.walkCycle) * 0.01,  
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                               
+                0                                 
             );
            
         }
         
         if (rightArm && rightArm === this.rArm) {
-            // If this is the grappling hook arm, make sure it's being animated
             rightArm.rotation.set(
-                Math.sin(this.walkCycle + Math.PI) * 0.01,  // X rotation (opposite of left arm)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                         // Y rotation
-                0                                          // Z rotation
+                Math.sin(this.walkCycle + Math.PI) * 0.01,  
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                         
+                0                                         
             );
          
         }
         if(leftFoot){
             leftFoot.rotation.set(
-                0,  // X rotation (swinging forward/backward)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
+                0,  
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                  
+                0                                
             );
         }
         if(rightFoot){
             rightFoot.rotation.set(
-                0,  // X rotation (opposite of left foot)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
+                0,  
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                          
+                0                                 
             );
         }
-        
+    }
         // Rest of your animation can remain as is
         
     
