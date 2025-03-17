@@ -74,12 +74,8 @@ export default class Player {
         this.flyControls.autoForward = false;
         this.flyControls.enabled = false; // Start disabled
 
-        const geo = new THREE.BoxGeometry(50, 5, 50);
+        const geo = new THREE.BoxGeometry(500, 50, 500);
         const mat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
-        this.cube = new THREE.Mesh(geo, mat)
-        this.cube.position.copy(new THREE.Vector3(50,0,5))
-        this.scene.add(this.cube)
-        this.collidables.push(this.cube);
 
         this.initListeners();
     }
@@ -87,7 +83,7 @@ export default class Player {
     reset(){
         console.log("resetting kirby");
         this.deactivateGrapplingHook();
-        this.kirby.position.set(0,0,0);
+        this.kirby.position.set(0,10,0);
         this.onGround = false;
         this.velocity = new THREE.Vector3();
         this.acceleration = new THREE.Vector3();
@@ -435,7 +431,7 @@ export default class Player {
 
         const restingThreshold = 0.01;
         if (this.isColliding >= 1 && this.velocity.y < restingThreshold) {
-            this.velocity.y = 0; // Stop the object
+            this.velocity.y = 0.01; // Stop the object
             this.onGround = true;
         }
 

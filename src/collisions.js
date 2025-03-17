@@ -32,7 +32,7 @@ export function doCollision(playerObj, stationaryObj, entryVelocity, playerVeloc
         const raycaster = new THREE.Raycaster();
         // Cast a ray in the direction opposite to the velocity
         const neg_velocity = entryVelocity.clone().negate().normalize();
-        const raycast_pos = playerObj.position.clone().add(neg_velocity.normalize().multiplyScalar(3));
+        const raycast_pos = playerObj.position.clone().add(neg_velocity.normalize().multiplyScalar(1));
         const direction = entryVelocity.normalize();
         raycaster.set(raycast_pos, direction);
         // player.createRope(raycast_pos, raycast_pos.clone().add(direction));

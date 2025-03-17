@@ -157,15 +157,23 @@ export default class ThreeManager {
                 this.player.addBodyPart(mesh);
             }
         );
+     // Update each of your objLoader.load calls like this:
+
         objLoader.load(
             '/static/obj/kirby_L_arm.obj',
             (object) => {
                 const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
+                // Add a name to the geometry
+                geo.name = 'kirby_L_arm';
+                
                 const mesh = new THREE.Mesh(geo, kirby_mat);
                 mesh.castShadow = true;
                 mesh.receiveShadowShadow = true;
+                // Add information to userData
+                
+                
                 this.player.addBodyPart(mesh);
             }
         );
@@ -175,9 +183,11 @@ export default class ThreeManager {
                 const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
+                geo.name= 'kirby_R_arm';
                 const mesh = new THREE.Mesh(geo, kirby_mat);
                 mesh.castShadow = true;
                 mesh.receiveShadowShadow = true;
+                
                 this.player.addBodyPart(mesh);
                 this.player.addRArm(mesh);
             }
@@ -188,6 +198,7 @@ export default class ThreeManager {
                 const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
+                geo.name= 'kirby_L_foot';
                 const mesh = new THREE.Mesh(geo, kirby_mat);
                 this.player.addBodyPart(mesh);
             }
@@ -198,6 +209,7 @@ export default class ThreeManager {
                 const geo = BufferGeometryUtils.mergeGeometries(object.children.map(child => child.geometry));
                 geo.translate(0, 3, 0);
                 geo.scale(0.4, 0.4, 0.4);
+                geo.name= 'kirby_R_foot';
                 const mesh = new THREE.Mesh(geo, kirby_mat);
                 this.player.addBodyPart(mesh);
                 console.log("kirby loaded");
