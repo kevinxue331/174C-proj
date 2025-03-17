@@ -15,13 +15,23 @@ export default class City {
 
         const ground_tex = this.textureLoader.load('/static/tex/ground_tex.jpg');
         const ground_mat = new THREE.MeshStandardMaterial({ map: ground_tex });
-        const planeGeometry = new THREE.PlaneGeometry(500, 500, 20, 20);
+        const width = 80;
+        const planeGeometry = new THREE.PlaneGeometry(width, width, 20, 20);
         this.plane = new THREE.Mesh(planeGeometry, ground_mat);
         this.plane.rotation.x = -0.5 * Math.PI;
         this.plane.castShadow = false;
         this.plane.receiveShadow = true;
-        this.scene.add(this.plane);
-        this.all = [this.plane];
+        this.all = [];
+        for (let i=0; i<10; i++) {
+            for (let j=0; j<10; j++) {
+                const clone = this.plane.clone();
+                clone.position.set(i*width-230, 0, -190+j*width)
+                this.scene.add(clone);
+                this.all.push(clone);
+            }
+        }
+        //this.scene.add(this.plane);
+        //this.all = [this.plane];
     }
 
     loadTextures() {
@@ -36,10 +46,10 @@ export default class City {
             ground: this.textureLoader.load('/static/tex/ground_tex.jpg'),
         };
         this.materials = {
-            glass_building: new THREE.MeshStandardMaterial({ map: this.textures.glass }),
-            building2: new THREE.MeshStandardMaterial({ map: this.textures.tex2 }),
-            building1: new THREE.MeshStandardMaterial({ map: this.textures.tex3 }),
-            concrete_building: new THREE.MeshStandardMaterial({ map: this.textures.concrete }),
+            glass_building: new THREE.MeshStandardMaterial({ map: this.textures.glass, side: THREE.DoubleSide }),
+            building2: new THREE.MeshStandardMaterial({ map: this.textures.tex2, side: THREE.DoubleSide }),
+            building1: new THREE.MeshStandardMaterial({ map: this.textures.tex3, side: THREE.DoubleSide }),
+            concrete_building: new THREE.MeshStandardMaterial({ map: this.textures.concrete, side: THREE.DoubleSide }),
             shed: new THREE.MeshStandardMaterial({ map: this.textures.shed }),
             street: new THREE.MeshStandardMaterial({ map: this.textures.street }),
             ground: new THREE.MeshStandardMaterial({ map: this.textures.ground }),
@@ -99,7 +109,7 @@ export default class City {
                 clone.position.set(...pos);
                 clone.rotation.set(0, rot[1], 0);
                 if (isRoad == false) {
-                    clone.rotation.set(0, rot[1]+(Math.random()-0.5) * 0.1, 0);
+                    clone.rotation.set(0, rot[1]+(Math.random()-0.5) * 0.2, 0);
                 }
                 clone.scale.set(1, 1 + (Math.random()-0.3) *0.8, 1)
                 this.scene.add(clone);
@@ -118,7 +128,9 @@ export default class City {
         let positions = [
             [[a*18, 0, a*18], [0, 0, 0]],
             [[a*6, 0, a*110], [0, pi/2, 0]],
-            [[a*22, 0, a*80], [0, pi, 0]]
+            [[a*22, 0, a*80], [0, pi, 0]],
+            [[a*77, 0, a*10], [0, pi/2, 0]],
+            [[],[]]
         ]
         return positions;
     }
@@ -133,6 +145,8 @@ export default class City {
             [[a*48, 0, a*25], [0, pi+0.5, 0]],
             [[a*-10, 0, a*-10], [0, pi/4, 0]],
             [[a*-18, 0, a*24], [0, -pi, 0]],
+            [[a*35, 0, a*110], [0, 0.6, 0]],
+            [[a*50, 0, a*115], [0, 0.6+ Math.PI, 0]],
             [[], []]
         ]
         return positions;
@@ -150,10 +164,22 @@ export default class City {
             [[a*-25, 0, a*9], [0, pi, 0]],
             [[], []]
         ]
+        for (let i=0; i<2; i++) {
+            for (let j=0; j<5; j++) {
+                let x, y, z = 0;
+                let rx, ry, rz = 0;
+                const offset = [77, 0, 80];
+                x = (offset[0] + i * width * 1.8) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * width * 1.6) * this.global_scale[2];
+                ry = Math.PI/2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
         return positions;
     }
     get_building5_positions() {
-        //cirular
+        //circular
         const offset = [0, 0, 0];
         const a = this.global_scale[0];
         const width = 7.48;
@@ -161,6 +187,8 @@ export default class City {
 
         let positions = [
             [[a*35 - 8, 0, a*52], [0, pi+0.5, 0]],
+            [[a*-40 - 8, 0, a*17], [0, pi+0.2, 0]],
+            [[a*-20, 0, a*110], [0, pi+0.2, 0]],
             [[], []]
         ]
         return positions;
@@ -200,6 +228,30 @@ export default class City {
             ry = Math.PI/2;
             positions.push([[x, y, z], [rx, ry, rz]]);
         }
+        for (let i=0; i<2; i++) {
+            for (let j=0; j<3; j++) {
+                let x, y, z = 0;
+                let rx, ry, rz = 0;
+                const offset = [78, 0, 32];
+                x = (offset[0] + i * width * 1.8) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * width * 2.3) * this.global_scale[2];
+                ry = Math.PI / 2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
+        for (let i=0; i<4; i++) {
+            for (let j=0; j<2; j++) {
+                let x, y, z = 0;
+                let rx, ry, rz = 0;
+                const offset = [70, 0, 140];
+                x = (offset[0] - i * width * 1.8) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * width * 2.3) * this.global_scale[2];
+                ry = Math.PI / 2;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
         return positions;
     }
     get_building7_positions() {
@@ -231,6 +283,16 @@ export default class City {
                 positions.push([[x, y, z], [rx, ry, rz]]);
             }
         }
+        for (let i=0; i<3; i++) {
+            for (let j=0; j<2; j++) {
+                const offset = [19, 0, 135];
+                x = (offset[0] - i * width * 1.8) * this.global_scale[0];
+                y = (offset[1]) * this.global_scale[1];
+                z = (offset[2] + j * width * 1.6) * this.global_scale[2];
+                ry = Math.PI;
+                positions.push([[x, y, z], [rx, ry, rz]]);
+            }
+        }
         return positions;
     }
 
@@ -241,7 +303,13 @@ export default class City {
         const pi = Math.PI;
         let x, y, z = 0;
         let rx, ry, rz = 0;
-        let positions = [];
+        let positions = [
+            [[a*19, 0, a*120], [0, 0, 0]],
+            [[a*19, 0, a*114], [0, 0, 0]],
+            [[a*16.5, 0, a*107], [0, pi/2, 0]],
+
+            [[], []]
+        ];
 
         for (let i=0; i<4; i++) {
             const offset = [6, 0, 28];

@@ -136,39 +136,41 @@ export default class Player {
 
         // Calculate movement speed (for animation speed)
         const moveSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
-
+        let isMoving = this.velocity.x + this.velocity.y + this.velocity.z;
         // Test animation to ensure arms move
-        if (leftArm) {
-            leftArm.rotation.set(
-                Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
-            );
 
-        }
+        if (isMoving > 0.01) {
+            if (leftArm) {
+                leftArm.rotation.set(
+                    Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
+                    Math.sin((this.walkCycle + Math.PI)*3) * 0.3,                                // Y rotation (unchanged)
+                    0                                 // Z rotation (unchanged)
+                );
+            }
 
-        if (rightArm && rightArm === this.rArm) {
-            // If this is the grappling hook arm, make sure it's being animated
-            rightArm.rotation.set(
-                Math.sin(this.walkCycle + Math.PI) * 0.01,  // X rotation (opposite of left arm)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                         // Y rotation
-                0                                          // Z rotation
-            );
+            if (rightArm && rightArm === this.rArm) {
+                // If this is the grappling hook arm, make sure it's being animated
+                rightArm.rotation.set(
+                    Math.sin(this.walkCycle) * 0.01,  // X rotation (opposite of left arm)
+                    Math.sin((this.walkCycle + Math.PI)*3) * 0.3,                                         // Y rotation
+                    0                                          // Z rotation
+                );
 
-        }
-        if(leftFoot){
-            leftFoot.rotation.set(
-                0,  // X rotation (swinging forward/backward)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
-            );
-        }
-        if(rightFoot){
-            rightFoot.rotation.set(
-                0,  // X rotation (opposite of left foot)
-                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
-                0                                 // Z rotation (unchanged)
-            );
+            }
+            if (leftFoot) {
+                leftFoot.rotation.set(
+                    0,  // X rotation (swinging forward/backward)
+                    Math.sin((this.walkCycle)*3) * 0.3,                                // Y rotation (unchanged)
+                    0                                 // Z rotation (unchanged)
+                );
+            }
+            if (rightFoot) {
+                rightFoot.rotation.set(
+                    0,  // X rotation (opposite of left foot)
+                    Math.sin((this.walkCycle + Math.PI/2)*3) * 0.3,                                // Y rotation (unchanged)
+                    0                                 // Z rotation (unchanged)
+                );
+            }
         }
 
         // Rest of your animation can remain as is
