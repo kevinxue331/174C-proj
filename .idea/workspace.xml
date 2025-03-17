@@ -6,7 +6,16 @@
   <component name="ChangeListManager">
     <list default="true" id="732cd57f-1376-4a50-96c1-9085894d238d" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/spider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/spider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/city.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/city.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/building_bent.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/building_bent.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/building_bent_2.obj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/building_box.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/building_box.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/building_elliptical.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/building_elliptical.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/building_square_1.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/building_square_1.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/street_1.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/street_1.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/street_2.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/street_2.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/street_3.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/street_3.obj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/obj/street_4.obj" beforeDir="false" afterPath="$PROJECT_DIR$/static/obj/street_4.obj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
