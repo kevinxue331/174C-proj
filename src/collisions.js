@@ -73,3 +73,23 @@ export function doCollision(playerObj, stationaryObj, entryVelocity, playerVeloc
 
     return {penaltyForce: new THREE.Vector3(0, 0, 0), isColliding: 0}
 }
+
+export function isOnGround(characterPosition, collidables, threshold = 0.1) {
+    // Create a ray starting from the character's position, pointing downward
+    const rayOrigin = characterPosition.clone().add(new THREE.Vector3(0,5,0));
+    const rayDirection = new THREE.Vector3(0, -1, 0); // Downward direction
+    const raycaster = new THREE.Raycaster(rayOrigin, rayDirection);
+
+    // Check for intersections with collidable objects
+    const intersects = raycaster.intersectObjects(collidables, true);
+
+    console.log(intersects.length)
+
+    // If there's an intersection and it's within the threshold distance, return true
+    if (intersects.length > 0 && intersects[0].distance <= threshold+5) {
+        return true;
+    }
+
+    // Otherwise, return false
+    return false;
+}

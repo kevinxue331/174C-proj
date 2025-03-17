@@ -429,10 +429,15 @@ export default class Player {
             if(this.isColliding) netForce.add(penaltyForce);
         }
 
+
         const restingThreshold = 0.01;
+        const allowWallJump = true;
         if (this.isColliding >= 1 && this.velocity.y < restingThreshold) {
-            this.velocity.y = 0.01; // Stop the object
-            this.onGround = true;
+            if(allowWallJump) this.onGround = true;
+            if (collisions.isOnGround(this.kirby.position, this.collidables, 1)) {
+                this.velocity.y = 0.01; // Stop the object
+                this.onGround = true;
+            }
         }
 
 
