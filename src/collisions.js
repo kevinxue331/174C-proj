@@ -17,7 +17,7 @@ export function isColliding(movingObj, stationaryObj) {
 const ks = 0.5; // Stiffness coefficient
 const kd = 0.5;  // Damping coefficient
 
-export function doCollision(playerObj, stationaryObj, entryVelocity, playerVelocity) {
+export function doCollision(playerObj, stationaryObj, entryVelocity, playerVelocity, player) {
     // Bounding box for the moving object
     const movingBox = new THREE.Box3().setFromObject(playerObj);
 
@@ -30,13 +30,15 @@ export function doCollision(playerObj, stationaryObj, entryVelocity, playerVeloc
 
         // Narrow-phase check: Use raycasting in the opposite direction of velocity
         const raycaster = new THREE.Raycaster();
-        const direction = new THREE.Vector3();
-
         // Cast a ray in the direction opposite to the velocity
-        direction.copy(entryVelocity).negate().normalize();
-        raycaster.set(playerObj.position, direction);
+        const neg_velocity = entryVelocity.clone().negate().normalize();
+        const raycast_pos = playerObj.position.clone().add(neg_velocity.normalize().multiplyScalar(3));
+        const direction = entryVelocity.normalize();
+        raycaster.set(raycast_pos, direction);
+        // player.createRope(raycast_pos, raycast_pos.clone().add(direction));
 
         const intersects = raycaster.intersectObject(stationaryObj);
+
 
         if (intersects.length > 0) {
             const intersect = intersects[0];
@@ -44,7 +46,7 @@ export function doCollision(playerObj, stationaryObj, entryVelocity, playerVeloc
 
             // Check if the moving object is approaching the surface
             const dot = direction.dot(faceNormal);
-            if (dot > 0) {
+            if (dot < 0) {
                 // Calculate the penetration depth
                 const penetrationDepth = intersect.distance;
 
@@ -63,11 +65,11 @@ export function doCollision(playerObj, stationaryObj, entryVelocity, playerVeloc
                 // console.log("damp: " + damp);
                 // console.log("penaltyForce: " + penaltyForce.length());
 
-                return penaltyForce;
+                return {penaltyForce: penaltyForce, isColliding: 2}
             }
         }
+        else return {penaltyForce: new THREE.Vector3(0, 0, 0), isColliding: 1}
     }
 
-    // No collision detected
-    return new THREE.Vector3(0, 0, 0);
+    return {penaltyForce: new THREE.Vector3(0, 0, 0), isColliding: 0}
 }

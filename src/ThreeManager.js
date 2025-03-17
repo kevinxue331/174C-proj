@@ -129,7 +129,7 @@ export default class ThreeManager {
         let objLoader = new OBJLoader();
         this.geoList = [];
         //var objMat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
-        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 }, this.renderer.domElement);
+        this.player = new Player(this.scene, this.camera, { x: 0, y: 3, z: 0 }, this.renderer.domElement, this.city.all);
 
         this.gamemanager = new GameManager(() => this.resetGame());
 

@@ -4,7 +4,7 @@ import * as collisions from "./collisions.js"
 import {doCollision, isColliding} from "./collisions.js";
 
 export default class Player {
-    constructor(scene, camera, position = { x: 0, y: 3, z: 0 }, renderer) {
+    constructor(scene, camera, position = { x: 0, y: 3, z: 0 }, renderer, collidables) {
         this.scene = scene;
         this.camera = camera;
         this.velocity = new THREE.Vector3();
@@ -13,16 +13,24 @@ export default class Player {
         this.maxSpeed = 0.5;
         this.jumpForce = 0.8;
         this.gravity = -0.02;
+        this.walkCycle = 0;
         this.onGround = false;
         this.rArm = null;
 
         // collision flags
         this.isColliding = false;
         this.entryVelocity = new THREE.Vector3();
-        this.stopOscillation = false;
+        this.collidables = collidables;
 
         // integration
         this.t_sim = 0;
+        this.bodyParts = {
+            leftArm: null,
+            rightArm: null,
+            leftFoot: null,
+            rightFoot: null,
+            torso: null
+        };
 
         // Grappling hook properties
         this.grapplingHook = {
@@ -71,6 +79,7 @@ export default class Player {
         this.cube = new THREE.Mesh(geo, mat)
         this.cube.position.copy(new THREE.Vector3(50,0,5))
         this.scene.add(this.cube)
+        this.collidables.push(this.cube);
 
         this.initListeners();
     }
@@ -88,9 +97,87 @@ export default class Player {
     addRArm(mesh){
         this.rArm = mesh;
     }
-
     addBodyPart(mesh) {
         this.kirby.add(mesh);
+
+        // Identify body parts by their geometry or name if possible
+        const name = mesh.geometry?.name || '';
+
+        // Check if this mesh contains "L_arm" in the file path (based on how it was loaded)
+        if (name.includes('kirby_L_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_arm'))) {
+            this.bodyParts.leftArm = mesh;
+            console.log("Left arm attached");
+        }
+        // Right arm (already tracked via addRArm)
+        else if (name.includes('kirby_R_arm') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_arm'))) {
+            this.bodyParts.rightArm = mesh;
+            console.log("Right arm attached");
+        }
+        // Left foot
+        else if (name.includes('kirby_L_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_L_foot'))) {
+            this.bodyParts.leftFoot = mesh;
+            console.log("Left foot attached");
+        }
+        // Right foot
+        else if (name.includes('kirby_R_foot') || (mesh.userData && mesh.userData.filePath?.includes('kirby_R_foot'))) {
+            this.bodyParts.rightFoot = mesh;
+            console.log("Right foot attached");
+        }
+        // Torso
+        else if (name.includes('kirby_torso') || (mesh.userData && mesh.userData.filePath?.includes('kirby_torso'))) {
+            this.bodyParts.torso = mesh;
+            console.log("Torso attached");
+        }
+    }
+    animateLimbs(delta) {
+        const { leftArm, rightArm, leftFoot, rightFoot } = this.bodyParts;
+
+        // Debug info
+
+
+        // Always increment walk cycle for testing
+        this.walkCycle += delta * 5;
+
+        // Calculate movement speed (for animation speed)
+        const moveSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
+
+        // Test animation to ensure arms move
+        if (leftArm) {
+            leftArm.rotation.set(
+                Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+
+        }
+
+        if (rightArm && rightArm === this.rArm) {
+            // If this is the grappling hook arm, make sure it's being animated
+            rightArm.rotation.set(
+                Math.sin(this.walkCycle + Math.PI) * 0.01,  // X rotation (opposite of left arm)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                         // Y rotation
+                0                                          // Z rotation
+            );
+
+        }
+        if(leftFoot){
+            leftFoot.rotation.set(
+                0,  // X rotation (swinging forward/backward)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+        }
+        if(rightFoot){
+            rightFoot.rotation.set(
+                0,  // X rotation (opposite of left foot)
+                Math.sin(this.walkCycle + Math.PI) * 0.3,                                // Y rotation (unchanged)
+                0                                 // Z rotation (unchanged)
+            );
+        }
+
+        // Rest of your animation can remain as is
+
+
     }
 
     initListeners() {
@@ -99,7 +186,8 @@ export default class Player {
         document.addEventListener('mousemove', (event) => this.handleMouseMove(event));
         window.addEventListener('click', () => {
             this.requestPointerLock(); // Lock pointer
-            this.shootRope(); // Shoot rope
+            if(this.grapplingHook.isActive) this.deactivateGrapplingHook();
+            else this.shootRope(); // Shoot rope
         });
     }
 
@@ -113,7 +201,7 @@ export default class Player {
         crosshair.scale.set(5, 5, 5); // Adjust size
         crosshair.position.copy(position);
         this.scene.add(crosshair);
-    
+
         // Store the crosshair reference for later removal
         this.grapplingHook.crosshair = crosshair;
     }
@@ -122,12 +210,12 @@ export default class Player {
         const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
         const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
         const rope = new THREE.Line(geometry, material);
-    
+
         this.scene.add(rope);
-    
+
         // Store the rope reference for later removal
         this.grapplingHook.rope = rope;
-    
+
         // Remove rope after 3 seconds (or when the grappling hook is deactivated)
         setTimeout(() => {
             if (this.grapplingHook.rope) {
@@ -144,19 +232,19 @@ export default class Player {
         const direction = new THREE.Vector3();
         let ropeStart = this.kirby.position.clone();
         ropeStart.y = ropeStart.y + ropeStartY; // Move rope up a bit so it looks like it's coming from Kirby
-    
+
         this.camera.getWorldDirection(direction); // Get camera's forward direction
-    
+
         const raycaster = new THREE.Raycaster(ropeStart, direction.normalize(), 0, maxLength);
         const intersects = raycaster.intersectObjects(this.scene.children, true); // Check for collisions
-    
+
         if (intersects.length > 0) {
             // Activate the grappling hook
             this.deactivateGrapplingHook(); // deactivate if already activated
             this.grapplingHook.isActive = true;
             this.grapplingHook.targetPoint = intersects[0].point.clone(); // Store the intersection point
             this.grapplingHook.ropeLength = this.kirby.position.distanceTo(this.grapplingHook.targetPoint); // Calculate rope length
-    
+
             // Create the rope
             this.createRope(ropeStart, this.grapplingHook.targetPoint);
             this.createCrosshair(this.grapplingHook.targetPoint);
@@ -170,26 +258,26 @@ export default class Player {
     applySpringForce() {
         let force = new THREE.Vector3();
         if (!this.grapplingHook.isActive || !this.grapplingHook.targetPoint) return;
-    
+
         // Calculate the vector from Kirby to the target point
         const ropeVector = new THREE.Vector3()
             .subVectors(this.grapplingHook.targetPoint, this.kirby.position);
-    
+
         // Calculate the spring force (tension force)
         const springForce = ropeVector
             .normalize()
             .multiplyScalar(ropeVector.length() * this.grapplingHook.springConstant); // Stronger spring force
-    
+
         // Apply damping to reduce oscillations
         springForce.sub(this.velocity.clone().multiplyScalar(this.grapplingHook.damping));
-        springForce.y *= this.grapplingHook.yScale; 
-    
+        springForce.y *= this.grapplingHook.yScale;
+
         // Apply the spring force to Kirby's acceleration
         force.add(springForce);
-    
+
         // Apply gravity to create the pendulum effect
         force.y += this.gravity;
-    
+
         // Add a sideways force to simulate swinging
         const swingForce = new THREE.Vector3()
             .crossVectors(ropeVector, new THREE.Vector3(0, 1, 0)) // Cross product with up vector
@@ -206,10 +294,10 @@ export default class Player {
 
 
         force.add(swingForce);
-    
+
         // Check if Kirby is close enough to the target point to deactivate the grappling hook
         const distanceToTarget = this.kirby.position.distanceTo(this.grapplingHook.targetPoint);
-        if (distanceToTarget < 1) {
+        if (distanceToTarget < 3) {
             console.log("Disabling grappling hook");
             this.deactivateGrapplingHook();
         }
@@ -220,11 +308,11 @@ export default class Player {
     deactivateGrapplingHook() {
         this.grapplingHook.isActive = false;
         this.grapplingHook.targetPoint = null;
-    
+
         // Reset velocity and acceleration to prevent lingering movement
         // this.velocity.set(0, 0, 0); // TODO figure out if this is a good idea
         this.acceleration.set(0, 0, 0);
-    
+
         // Remove the rope
         if (this.grapplingHook.rope) {
             this.scene.remove(this.grapplingHook.rope);
@@ -312,18 +400,19 @@ export default class Player {
 
     // called once a frame
     update(delta) {
-        let sims_per_frame = 100; // number of physics simulations ran / second
+        this.animateLimbs(delta);
+        let sims_per_frame = 10; // number of physics simulations ran / second
         for(let t = 0; t < 1; t += 1/sims_per_frame) this.run(1/sims_per_frame);
 
         if (this.debugMode) {
             this.flyControls.update(delta); // Update FlyControls if enabled
             return;
         }
-    
+
         // Update camera position to stay behind and above Kirby
         const cameraOffset = new THREE.Vector3(0, this.cameraHeight, this.cameraDistance);
         cameraOffset.applyQuaternion(this.camera.quaternion); // Align offset with camera's rotation
-    
+
         // Set the camera's position relative to Kirby
         this.camera.position.copy(this.kirby.position).add(cameraOffset);
     }
@@ -335,17 +424,22 @@ export default class Player {
 
         // collision force
         if(!this.isColliding) this.entryVelocity = this.velocity.clone();
-        const penaltyForce = collisions.doCollision(this.kirby, this.cube, this.entryVelocity, this.velocity);
-        this.isColliding = collisions.isColliding(this.kirby, this.cube);
-        netForce.add(penaltyForce);
+        this.isColliding = 0;
+        for(let i=0; i<this.collidables.length; i++){
+            let collidable = this.collidables[i];
+            const collisionReturn = collisions.doCollision(this.kirby, collidable, this.entryVelocity, this.velocity, this);
+            const penaltyForce = collisionReturn.penaltyForce;
+            if(collisionReturn.isColliding > this.isColliding) this.isColliding = collisionReturn.isColliding;
+            if(this.isColliding) netForce.add(penaltyForce);
+        }
 
         const restingThreshold = 0.01;
-        if (this.isColliding && this.velocity.y < restingThreshold) {
+        if (this.isColliding >= 1 && this.velocity.y < restingThreshold) {
             this.velocity.y = 0; // Stop the object
             this.onGround = true;
         }
 
-        console.log(this.isColliding);
+
 
         // if(this.isColliding)  console.log(penaltyForce);
 
@@ -413,12 +507,12 @@ export default class Player {
             this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
         }
 
-        // Simple ground collision
-        if (this.kirby.position.y <= 0) {
-            this.kirby.position.y = 0;
-            this.velocity.y = 0;
-            this.onGround = true;
-        }
+        // // Simple ground collision
+        // if (this.kirby.position.y <= 0) {
+        //     this.kirby.position.y = 0;
+        //     this.velocity.y = 0;
+        //     this.onGround = true;
+        // }
 
         // Apply drag (deceleration) to horizontal movement only
         this.velocity.x *= Math.pow(0.9, dt);

@@ -21,6 +21,7 @@ export default class City {
         this.plane.castShadow = false;
         this.plane.receiveShadow = true;
         this.scene.add(this.plane);
+        this.all = [this.plane];
     }
 
     loadTextures() {
@@ -47,16 +48,40 @@ export default class City {
     }
 
     loadModels() {
-        this.loadModel('/static/obj/building_elliptical.obj', this.materials.glass_building, this.get_building1_positions());
-        this.loadModel('/static/obj/building_bent.obj', this.materials.building1, this.get_building2_positions());
-        this.loadModel('/static/obj/building_square_1.obj', this.materials.building2, this.get_building3_positions());
-        this.loadModel('/static/obj/building_box.obj', this.materials.building1, this.get_building7_positions());
-        this.loadModel('/static/obj/building_circle.obj', this.materials.concrete_building, this.get_building5_positions());
-        this.loadModel('/static/obj/building_shed.obj', this.materials.shed, this.get_building6_positions());
-        this.loadModel('/static/obj/crate.obj', this.materials.crate, this.get_crate_positions());
+        this.loadCollidableModel('/static/obj/building_elliptical.obj', this.materials.glass_building, this.get_building1_positions());
+        this.loadCollidableModel('/static/obj/building_bent.obj', this.materials.building1, this.get_building2_positions());
+        this.loadCollidableModel('/static/obj/building_square_1.obj', this.materials.building2, this.get_building3_positions());
+        this.loadCollidableModel('/static/obj/building_box.obj', this.materials.building1, this.get_building7_positions());
+        this.loadCollidableModel('/static/obj/building_circle.obj', this.materials.concrete_building, this.get_building5_positions());
+        this.loadCollidableModel('/static/obj/building_shed.obj', this.materials.shed, this.get_building6_positions());
+        this.loadCollidableModel('/static/obj/crate.obj', this.materials.crate, this.get_crate_positions());
         this.loadModel('/static/obj/street_1.obj', this.materials.street, this.get_road1_positions(), true);
         this.loadModel('/static/obj/street_3.obj', this.materials.street, this.get_road3_positions(), true);
         this.loadModel('/static/obj/street_4.obj', this.materials.street, this.get_road4_positions(), true);
+    }
+
+    loadCollidableModel(path, material, positions, isRoad=false) {
+        this.objLoader.load(path, (object) => {
+            const geometries = object.children.map(child => child.geometry);
+            const geometry = BufferGeometryUtils.mergeGeometries(geometries, false);
+            geometry.scale(...this.global_scale);
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            positions.forEach(([pos, rot]) => {
+                const clone = mesh.clone();
+                clone.position.set(...pos);
+                clone.rotation.set(0, rot[1], 0);
+                if (isRoad == false) {
+                    clone.rotation.set(0, rot[1]+(Math.random()-0.5) * 0.1, 0);
+                }
+                clone.scale.set(1, 1 + (Math.random()-0.3) *0.8, 1)
+                this.scene.add(clone);
+                this.all.push(clone);
+            });
+        });
     }
 
     loadModel(path, material, positions, isRoad=false) {
@@ -78,6 +103,7 @@ export default class City {
                 }
                 clone.scale.set(1, 1 + (Math.random()-0.3) *0.8, 1)
                 this.scene.add(clone);
+                this.all.push(clone);
             });
         });
     }
