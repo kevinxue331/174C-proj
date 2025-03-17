@@ -46,10 +46,10 @@ export default class City {
             ground: this.textureLoader.load('/static/tex/ground_tex.jpg'),
         };
         this.materials = {
-            glass_building: new THREE.MeshStandardMaterial({ map: this.textures.glass, side: THREE.DoubleSide }),
-            building2: new THREE.MeshStandardMaterial({ map: this.textures.tex2, side: THREE.DoubleSide }),
-            building1: new THREE.MeshStandardMaterial({ map: this.textures.tex3, side: THREE.DoubleSide }),
-            concrete_building: new THREE.MeshStandardMaterial({ map: this.textures.concrete, side: THREE.DoubleSide }),
+            glass_building: new THREE.MeshStandardMaterial({ map: this.textures.glass }),
+            building2: new THREE.MeshStandardMaterial({ map: this.textures.tex2 }),
+            building1: new THREE.MeshStandardMaterial({ map: this.textures.tex3 }),
+            concrete_building: new THREE.MeshStandardMaterial({ map: this.textures.concrete }),
             shed: new THREE.MeshStandardMaterial({ map: this.textures.shed }),
             street: new THREE.MeshStandardMaterial({ map: this.textures.street }),
             ground: new THREE.MeshStandardMaterial({ map: this.textures.ground }),

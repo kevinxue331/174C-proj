@@ -443,10 +443,6 @@ export default class Player {
         }
 
 
-
-        // if(this.isColliding)  console.log(penaltyForce);
-
-
         // Calculate movement direction based on camera orientation
         const movementForce = new THREE.Vector3();
 

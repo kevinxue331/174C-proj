@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import * as math from 'https://cdn.jsdelivr.net/npm/mathjs@10.6.4/+esm';
-import * as matrixhelper from "./matrixhelper.js"
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { CCDIKSolver } from 'three/addons/animation/CCDIKSolver.js';
 
 export default class Spider {
-    constructor() {
+    constructor(player) {
         this.initialized = false;
         this.root_bone_inverse_matrix = null;
+        this.player = player;
+        this.yaw = 0;
         window.addEventListener('keydown', this.onKeyDown.bind(this));
     }
 
@@ -33,10 +33,14 @@ export default class Spider {
                     }
                 });
 
+                this.spiderRoot = gltf.scene.getObjectByName("Sketchfab_model");
                 let ik_chains = [];
                 this.left_targets = [];
                 this.right_targets = [];
-                function create_front_leg_ik_chain(femur_name, patella_name, tibia_name, meta_name, tarsus_name, target_array) {
+                this.left_rest_pos = [];
+                this.right_rest_pos = [];
+
+                function create_front_leg_ik_chain(femur_name, patella_name, tibia_name, meta_name, tarsus_name, target_array, rest_array, root) {
                     // find leg bones
                     const femur = gltf.scene.getObjectByName(femur_name);
                     const patella = gltf.scene.getObjectByName(patella_name);
@@ -59,17 +63,21 @@ export default class Spider {
 
                     target_array.push(targetBone);
 
-                    console.log("initial rot:")
-                    console.log(patella.rotation);
+                    // convert & save the end effector's world position to local space relative to the body
+                    const localEndEffectorPos = new THREE.Vector3();
+                    const bodyInverseMatrix = new THREE.Matrix4();
+                    bodyInverseMatrix.copy(root.matrixWorld).invert();
+                    localEndEffectorPos.copy(end_effector_orig_pos).applyMatrix4(bodyInverseMatrix);
+                    rest_array.push(localEndEffectorPos);
 
                     const initial_femur = new THREE.Vector3(femur.rotation.x, femur.rotation.y, femur.rotation.z);
-                    const femur_affordance = new THREE.Vector3(Math.PI/8,Math.PI/8,0);
+                    const femur_affordance = new THREE.Vector3(Math.PI / 8, Math.PI / 8, 0);
 
                     const initial_patella = new THREE.Vector3(patella.rotation.x, patella.rotation.y, patella.rotation.z);
-                    const patella_affordance = new THREE.Vector3(Math.PI/6, Math.PI/12, 0);
+                    const patella_affordance = new THREE.Vector3(Math.PI / 6, Math.PI / 12, 0);
 
                     const initial_tibia = new THREE.Vector3(tibia.rotation.x, tibia.rotation.y, tibia.rotation.z);
-                    const tibia_affordance = new THREE.Vector3(Math.PI/8,Math.PI/8,0);
+                    const tibia_affordance = new THREE.Vector3(Math.PI / 8, Math.PI / 8, 0);
 
                     // create an IK chain
                     const ikChain = {
@@ -99,7 +107,8 @@ export default class Spider {
 
                     ik_chains.push(ikChain);
                 }
-                function create_leg_ik_chain(femur_name, tibia_name, meta_name, tarsus_name, target_array) {
+
+                function create_leg_ik_chain(femur_name, tibia_name, meta_name, tarsus_name, target_array, rest_array, root) {
                     // find leg bones
                     const femur = gltf.scene.getObjectByName(femur_name);
                     const tibia = gltf.scene.getObjectByName(tibia_name);
@@ -121,11 +130,18 @@ export default class Spider {
 
                     target_array.push(targetBone);
 
+                    // convert & save the end effector's world position to local space relative to the body
+                    const localEndEffectorPos = new THREE.Vector3();
+                    const bodyInverseMatrix = new THREE.Matrix4();
+                    bodyInverseMatrix.copy(root.matrixWorld).invert();
+                    localEndEffectorPos.copy(end_effector_orig_pos).applyMatrix4(bodyInverseMatrix);
+                    rest_array.push(localEndEffectorPos);
+
                     const initial_femur = new THREE.Vector3(femur.rotation.x, femur.rotation.y, femur.rotation.z);
-                    const femur_affordance = new THREE.Vector3(Math.PI/8,Math.PI/8,0);
+                    const femur_affordance = new THREE.Vector3(Math.PI / 8, Math.PI / 8, Math.PI / 8);
 
                     const initial_tibia = new THREE.Vector3(tibia.rotation.x, tibia.rotation.y, tibia.rotation.z);
-                    const tibia_affordance = new THREE.Vector3(Math.PI/8,Math.PI/8,0);
+                    const tibia_affordance = new THREE.Vector3(Math.PI / 2, 0, Math.PI / 2);
 
                     // create an IK chain
                     const ikChain = {
@@ -152,22 +168,21 @@ export default class Spider {
                 }
 
                 create_front_leg_ik_chain("Leg1_L_1_33", "Leg1_L_2_32",
-                    "Leg1_L_3_31", "Leg1_L_4_30", "Leg1_L_5_29", this.left_targets);
+                    "Leg1_L_3_31", "Leg1_L_4_30", "Leg1_L_5_29", this.left_targets, this.left_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg2_L_1_37", "Leg2_L_2_36",
-                    "Leg2_L_3_35", "Leg2_L_4_34", this.left_targets);
+                    "Leg2_L_3_35", "Leg2_L_4_34", this.left_targets, this.left_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg3_L_1_41", "Leg3_L_2_40",
-                    "Leg3_L_3_39", "Leg3_L_4_38", this.left_targets);
+                    "Leg3_L_3_39", "Leg3_L_4_38", this.left_targets, this.left_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg4_L_1_45", "Leg4_L_2_44",
-                    "Leg4_L_3_43", "Leg4_L_4_42", this.left_targets);
+                    "Leg4_L_3_43", "Leg4_L_4_42", this.left_targets, this.left_rest_pos, this.spiderRoot);
                 create_front_leg_ik_chain("Leg1_R_1_12", "Leg1_R_2_11",
-                    "Leg1_R_3_10", "Leg1_R_4_9", "Leg1_R_5_8", this.right_targets);
+                    "Leg1_R_3_10", "Leg1_R_4_9", "Leg1_R_5_8", this.right_targets, this.right_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg2_R_1_16", "Leg2_R_2_15",
-                    "Leg2_R_3_14", "Leg2_R_4_13", this.right_targets);
+                    "Leg2_R_3_14", "Leg2_R_4_13", this.right_targets, this.right_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg3_R_1_20", "Leg3_R_2_19",
-                    "Leg3_R_3_18", "Leg3_R_4_17", this.right_targets);
+                    "Leg3_R_3_18", "Leg3_R_4_17", this.right_targets, this.right_rest_pos, this.spiderRoot);
                 create_leg_ik_chain("Leg4_R_1_24", "Leg4_R_2_23",
-                    "Leg4_R_3_22", "Leg4_R_4_21", this.right_targets);
-
+                    "Leg4_R_3_22", "Leg4_R_4_21", this.right_targets, this.right_rest_pos, this.spiderRoot);
 
 
                 // DEBUG
@@ -190,7 +205,7 @@ export default class Spider {
 
                 this.ikSolver = new CCDIKSolver(skinnedMesh, ik_chains);
 
-                scene.add(this.ikSolver.createHelper());
+                // scene.add(this.ikSolver.createHelper());
             },
             function (xhr) {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -205,16 +220,16 @@ export default class Spider {
 
     onKeyDown(event) {
         if (event.code === 'KeyJ') {
-            this.left_targets[0].position.add(new THREE.Vector3(-0.1,0,0));
+            this.left_targets[0].position.add(new THREE.Vector3(-0.1, 0, 0));
         }
         if (event.code === 'KeyL') {
-            this.left_targets[0].position.add(new THREE.Vector3(0.1,0,0));
+            this.left_targets[0].position.add(new THREE.Vector3(0.1, 0, 0));
         }
         if (event.code === 'KeyI') {
-            this.left_targets[0].position.add(new THREE.Vector3(0,0.1,0));
+            this.left_targets[0].position.add(new THREE.Vector3(0, 0.1, 0));
         }
         if (event.code === 'KeyK') {
-            this.left_targets[0].position.add(new THREE.Vector3(0,-0.1,0));
+            this.left_targets[0].position.add(new THREE.Vector3(0, -0.1, 0));
         }
         if (event.code === 'KeyT') {
             console.log("reset goal");
@@ -226,7 +241,7 @@ export default class Spider {
             this.ikSolver.update();
         }
         if (event.code === 'KeyX') {
-            const world_pos = new THREE.Vector3(0,1,0);
+            const world_pos = new THREE.Vector3(0, 1, 0);
             this.left_targets[0].getWorldPosition(world_pos);
             console.log("local: ")
             console.log(this.left_targets[0].position);
@@ -235,11 +250,94 @@ export default class Spider {
         }
     }
 
-    tick() {
-        if(!this.initialized || this.ikSolver == null) return;
-        // console.log(this.left_targets[0].position);
-        // console.log("updating")
-        this.ikSolver.update();
-    }
 
+    tick() {
+        if (!this.initialized || this.ikSolver == null) return;
+
+        const speedFactor = 1;
+
+        // full body movement
+        const speed = 0.1 * speedFactor;
+        const playerPos = this.player.kirby.position.clone();
+        const direction = new THREE.Vector3(playerPos.x - this.spiderRoot.position.x, 0, playerPos.z - this.spiderRoot.position.z).normalize();
+
+        // turn speed in radians/frame
+        const turnSpeed = 0.03 * speedFactor;
+
+        // compute the target yaw angle
+        const goalAngle = Math.atan2(direction.x, direction.z);
+
+        // compute the shortest angular difference
+        let angleDiff = ((goalAngle - this.yaw + Math.PI) % (2 * Math.PI)) - Math.PI;
+
+        // ensure it's the shortest rotation direction
+        if (angleDiff > turnSpeed) this.yaw += turnSpeed;
+        else if (angleDiff < -turnSpeed) this.yaw -= turnSpeed;
+        else this.yaw = goalAngle; // Snap if within turnSpeed range
+
+        // apply yaw
+        this.spiderRoot.rotation.set(-Math.PI / 2, 0, this.yaw - Math.PI / 2);
+
+        // move forward
+        const moveStep = new THREE.Vector3(0, 0, speed).applyEuler(new THREE.Euler(0, this.yaw, 0));
+        this.spiderRoot.position.add(moveStep);
+
+
+        // legs follow
+        for (let j = 0; j < 2; j++) {
+            let targets = [];
+            let rest_positions = [];
+            if (j === 0) {
+                targets = this.left_targets;
+                rest_positions = this.left_rest_pos;
+            } else {
+                targets = this.right_targets;
+                rest_positions = this.right_rest_pos;
+            }
+            for (let i = 0; i < 4; i++) {
+                // Assuming targets is an array of objects with position and grounded properties
+                let target = targets[i];
+                let restPosLocal = rest_positions[i].clone();
+                const restPosWorld = new THREE.Vector3();
+                restPosWorld.copy(restPosLocal).applyMatrix4(this.spiderRoot.matrixWorld);
+
+                const returnThreshold = 2;
+                const returnSpeed = 0.4 * speedFactor; // Adjust for desired speed
+                const legLiftAmount = 0.1;
+
+                // Initialize leg-specific attributes if they are undefined
+                if (target.returning === undefined) {
+                    target.returning = false;
+                }
+
+
+                // Main logic
+                if (target.returning) {
+                    // Move the target towards the resting position
+                    target.position.add(restPosWorld.clone().sub(target.position).normalize().multiplyScalar(returnSpeed));
+                    if (target.position.distanceTo(restPosWorld) < returnSpeed) {
+                        target.position.copy(restPosWorld);
+                        target.returning = false;
+                    }
+                } else if (target.position.distanceTo(restPosWorld) > returnThreshold) {
+                    // If adjacent legs are grounded, lift leg and begin return to resting position
+                    let adjacentLegsGrounded = true;
+                    if (i > 0 && targets[i - 1] !== undefined && targets[i - 1].returning) adjacentLegsGrounded = false;
+                    else if (i < 7 && targets[i + 1] !== undefined && targets[i + 1].returning) adjacentLegsGrounded = false;
+                    else if (j === 0 && this.right_targets[i] !== undefined && this.right_targets[i].returning) adjacentLegsGrounded = false;
+                    else if (j === 1 && this.left_targets[i] !== undefined && this.left_targets[i].returning) adjacentLegsGrounded = false;
+
+                    if (adjacentLegsGrounded) {
+                        target.returning = true;
+                        target.position.add(new THREE.Vector3(0, legLiftAmount, 0));
+                        target.position.add(restPosWorld.clone().sub(target.position).normalize().multiplyScalar(returnSpeed));
+                    }
+                }
+            }
+
+
+            this.ikSolver.update();
+        }
+
+    }
 }
