@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
+import * as collisions from "./collisions.js"
+import {doCollision, isColliding} from "./collisions.js";
 
 export default class Player {
     constructor(scene, camera, position = { x: 0, y: 3, z: 0 }, renderer) {
@@ -13,6 +15,14 @@ export default class Player {
         this.gravity = -0.02;
         this.onGround = false;
         this.rArm = null;
+
+        // collision flags
+        this.isColliding = false;
+        this.entryVelocity = new THREE.Vector3();
+        this.stopOscillation = false;
+
+        // integration
+        this.t_sim = 0;
 
         // Grappling hook properties
         this.grapplingHook = {
@@ -55,6 +65,12 @@ export default class Player {
         this.flyControls.rollSpeed = Math.PI / 3;
         this.flyControls.autoForward = false;
         this.flyControls.enabled = false; // Start disabled
+
+        const geo = new THREE.BoxGeometry(50, 5, 50);
+        const mat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
+        this.cube = new THREE.Mesh(geo, mat)
+        this.cube.position.copy(new THREE.Vector3(50,0,5))
+        this.scene.add(this.cube)
 
         this.initListeners();
     }
@@ -137,7 +153,12 @@ export default class Player {
         }
     }
 
+    applyForce(force) {
+        this.velocity.add(force);
+    }
+
     applySpringForce() {
+        let force = new THREE.Vector3();
         if (!this.grapplingHook.isActive || !this.grapplingHook.targetPoint) return;
     
         // Calculate the vector from Kirby to the target point
@@ -154,10 +175,10 @@ export default class Player {
         springForce.y *= this.grapplingHook.yScale; 
     
         // Apply the spring force to Kirby's acceleration
-        this.acceleration.add(springForce);
+        force.add(springForce);
     
         // Apply gravity to create the pendulum effect
-        this.acceleration.y += this.gravity;
+        force.y += this.gravity;
     
         // Add a sideways force to simulate swinging
         const swingForce = new THREE.Vector3()
@@ -172,9 +193,9 @@ export default class Player {
             swingForce.setLength(maxSwingForce);
         }
 
-        
-    
-        this.acceleration.add(swingForce);
+
+
+        force.add(swingForce);
     
         // Check if Kirby is close enough to the target point to deactivate the grappling hook
         const distanceToTarget = this.kirby.position.distanceTo(this.grapplingHook.targetPoint);
@@ -182,6 +203,8 @@ export default class Player {
             console.log("Disabling grappling hook");
             this.deactivateGrapplingHook();
         }
+
+        return force;
     }
 
     deactivateGrapplingHook() {
@@ -277,85 +300,15 @@ export default class Player {
         document.body.requestPointerLock();
     }
 
+    // called once a frame
     update(delta) {
+        let sims_per_frame = 100; // number of physics simulations ran / second
+        for(let t = 0; t < 1; t += 1/sims_per_frame) this.run(1/sims_per_frame);
+
         if (this.debugMode) {
             this.flyControls.update(delta); // Update FlyControls if enabled
             return;
         }
-    
-        // Reset acceleration
-        this.acceleration.set(0, 0, 0);
-    
-        // Calculate movement direction based on camera orientation
-        const movementDirection = new THREE.Vector3();
-    
-        if (this.keys.forward) movementDirection.z -= 1;
-        if (this.keys.backward) movementDirection.z += 1;
-        if (this.keys.left) movementDirection.x -= 1;
-        if (this.keys.right) movementDirection.x += 1;
-    
-        // Normalize the movement direction to ensure consistent speed
-        movementDirection.normalize();
-    
-        // Rotate the movement direction to align with the camera's orientation
-        movementDirection.applyQuaternion(this.camera.quaternion);
-    
-        // Project the movement direction onto the XZ plane (ignore Y component)
-        movementDirection.y = 0;
-        movementDirection.normalize(); // Re-normalize after projection
-    
-        // Apply movement force
-        this.acceleration.add(movementDirection.multiplyScalar(this.speed));
-    
-        // Apply gravity
-        this.acceleration.y += this.gravity;
-    
-        // Apply spring force if grappling hook is active
-        if (this.grapplingHook.isActive) {
-            this.applySpringForce();
-    
-            // Update the rope's position
-            if (this.grapplingHook.rope) {
-                const ropeStart = this.kirby.position.clone();
-                ropeStart.y += 2; // Adjust for Kirby's height
-                const ropeEnd = this.grapplingHook.targetPoint.clone();
-    
-                // Update the rope's geometry
-                this.grapplingHook.rope.geometry.setFromPoints([ropeStart, ropeEnd]);
-                this.grapplingHook.rope.geometry.verticesNeedUpdate = true;
-            }
-        }
-    
-        // Update velocity based on acceleration
-        this.velocity.add(this.acceleration);
-    
-        // Clamp horizontal velocity to maximum speed
-        const horizontalVelocity = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
-        if (horizontalVelocity.length() > this.maxSpeed) {
-            horizontalVelocity.setLength(this.maxSpeed);
-            this.velocity.x = horizontalVelocity.x;
-            this.velocity.z = horizontalVelocity.z;
-        }
-    
-        // Move Kirby
-        this.kirby.position.add(this.velocity);
-    
-        // Rotate Kirby to face the movement direction
-        if (movementDirection.x !== 0 || movementDirection.z !== 0) {
-            const targetAngle = Math.atan2(movementDirection.x, movementDirection.z) - Math.PI / 2;
-            this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
-        }
-    
-        // Simple ground collision
-        if (this.kirby.position.y <= 0) {
-            this.kirby.position.y = 0;
-            this.velocity.y = 0;
-            this.onGround = true;
-        }
-    
-        // Apply drag (deceleration) to horizontal movement only
-        this.velocity.x *= 0.9;
-        this.velocity.z *= 0.9;
     
         // Update camera position to stay behind and above Kirby
         const cameraOffset = new THREE.Vector3(0, this.cameraHeight, this.cameraDistance);
@@ -363,5 +316,102 @@ export default class Player {
     
         // Set the camera's position relative to Kirby
         this.camera.position.copy(this.kirby.position).add(cameraOffset);
+    }
+
+    // called once every dt seconds
+    // for physics simulations
+    run(dt) {
+        const netForce = new THREE.Vector3();
+
+        // collision force
+        if(!this.isColliding) this.entryVelocity = this.velocity.clone();
+        const penaltyForce = collisions.doCollision(this.kirby, this.cube, this.entryVelocity, this.velocity);
+        this.isColliding = collisions.isColliding(this.kirby, this.cube);
+        netForce.add(penaltyForce);
+
+        const restingThreshold = 0.01;
+        if (this.isColliding && this.velocity.y < restingThreshold) {
+            this.velocity.y = 0; // Stop the object
+            this.onGround = true;
+        }
+
+        console.log(this.isColliding);
+
+        // if(this.isColliding)  console.log(penaltyForce);
+
+
+        // Calculate movement direction based on camera orientation
+        const movementForce = new THREE.Vector3();
+
+        if (this.keys.forward) movementForce.z -= 1;
+        if (this.keys.backward) movementForce.z += 1;
+        if (this.keys.left) movementForce.x -= 1;
+        if (this.keys.right) movementForce.x += 1;
+
+        // Normalize the movement direction to ensure consistent speed
+        movementForce.normalize();
+
+        // Rotate the movement direction to align with the camera's orientation
+        movementForce.applyQuaternion(this.camera.quaternion);
+
+        // Project the movement direction onto the XZ plane (ignore Y component)
+        movementForce.y = 0;
+        movementForce.normalize(); // Re-normalize after projection
+
+        // Apply movement force
+        netForce.add(movementForce.multiplyScalar(this.speed));
+
+        // Apply gravity force
+        netForce.y += this.gravity;
+
+        // Apply spring force if grappling hook is active
+        if (this.grapplingHook.isActive) {
+            netForce.add(this.applySpringForce());
+
+            // Update the rope's position
+            if (this.grapplingHook.rope) {
+                const ropeStart = this.kirby.position.clone();
+                ropeStart.y += 2; // Adjust for Kirby's height
+                const ropeEnd = this.grapplingHook.targetPoint.clone();
+
+                // Update the rope's geometry
+                this.grapplingHook.rope.geometry.setFromPoints([ropeStart, ropeEnd]);
+                this.grapplingHook.rope.geometry.verticesNeedUpdate = true;
+            }
+        }
+
+        this.acceleration = netForce.clone();
+
+        // Update velocity
+        this.velocity.add(this.acceleration.clone().multiplyScalar(dt));
+
+        // Clamp horizontal velocity to maximum speed
+        const horizontalVelocity = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
+        if (horizontalVelocity.length() > this.maxSpeed) {
+            horizontalVelocity.setLength(this.maxSpeed);
+            this.velocity.x = horizontalVelocity.x;
+            this.velocity.z = horizontalVelocity.z;
+        }
+
+
+        // Update position
+        this.kirby.position.add(this.velocity.clone().multiplyScalar(dt));
+
+        // Rotate Kirby to face the movement direction
+        if (movementForce.x !== 0 || movementForce.z !== 0) {
+            const targetAngle = Math.atan2(movementForce.x, movementForce.z) - Math.PI / 2;
+            this.kirby.rotation.y = targetAngle; // Rotate Kirby to face the movement direction
+        }
+
+        // Simple ground collision
+        if (this.kirby.position.y <= 0) {
+            this.kirby.position.y = 0;
+            this.velocity.y = 0;
+            this.onGround = true;
+        }
+
+        // Apply drag (deceleration) to horizontal movement only
+        this.velocity.x *= Math.pow(0.9, dt);
+        this.velocity.z *= Math.pow(0.9, dt);
     }
 }
