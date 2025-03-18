@@ -3,7 +3,6 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
-import Snake from "./snake.js";
 import Player from './Player.js';
 import GameManager from './gamemanager.js';
 import City from './city.js';
@@ -219,19 +218,16 @@ export default class ThreeManager {
 
         // SPIDER
         this.spider = new Spider(this.player, this.city.all, true, 2);
-        this.spider.addToScene(this.scene);
+        this.spider.addToScene(this.scene, new THREE.Vector3(0,0,0));
 
         this.bigSpider = new Spider(this.player, this.city.all, false, 10, 0.5);
-        this.bigSpider.addToScene(this.scene);
+        this.bigSpider.addToScene(this.scene,  new THREE.Vector3(100,0,0));
 
         // Handling resize
         window.addEventListener('resize', this.onWindowResize.bind(this), false);
         console.log("end of init");
     }
 
-    pcnt = 0;
-    pauseCounter = 0;
-    paused = false;
     // runs every frame
     animate() {
         requestAnimationFrame(this.animate.bind(this));
@@ -240,17 +236,19 @@ export default class ThreeManager {
             this.gamemanager.updateScore(100);
         }
 
-        if(this.tick%1000 ==0){ // TODO add proper game end logic
-            this.gamemanager.gameOver();
-        }
-
         // tick the spider
         this.spider.tick();
         this.bigSpider.tick();
 
-        this.controls.update(0.02);
-        if (this.player) this.player.update(0.02);
+        if(this.spider.spiderRoot !== undefined && this.bigSpider.spiderRoot !== undefined) {
+            if(this.player.kirby.position.distanceToSquared(this.spider.spiderRoot.position.clone().add(new THREE.Vector3(0,this.spider.sizeScale*2,0))) <= 15*Math.pow(this.spider.sizeScale, 2)) this.gamemanager.gameOver();
+            else if(this.player.kirby.position.distanceToSquared(this.bigSpider.spiderRoot.position.clone().add(new THREE.Vector3(0,this.spider.sizeScale*2,0))) <= 15*Math.pow(this.spider.sizeScale, 2)) this.gamemanager.gameOver();
+        }
 
+        if(!this.gamemanager.isGameOver) {
+            this.controls.update(0.02);
+            if (this.player) this.player.update(0.02);
+        }
 
         this.renderer.render(this.scene, this.camera);
     }
@@ -259,6 +257,8 @@ export default class ThreeManager {
         if (!this.player) return;
         this.tick = 0;
         this.player.reset();
+        this.bigSpider.spiderRoot.position.set(100, 0, 0);
+        this.spider.spiderRoot.position.set(0, 0, 0);
     }
 
     start() {

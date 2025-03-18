@@ -87,17 +87,17 @@ export default class Player {
         const geo = new THREE.BoxGeometry(500, 50, 500);
         const mat = new THREE.MeshToonMaterial({ wireframe: true, side: THREE.DoubleSide, flatShading: true, color: 0x00fcec});
 
+        this.reset();
         this.initListeners();
     }
 
     reset(){
         console.log("resetting kirby");
         this.deactivateGrapplingHook();
-        this.kirby.position.set(0,10,0);
+        this.kirby.position.set(0,10,100);
         this.onGround = false;
         this.velocity = new THREE.Vector3();
         this.acceleration = new THREE.Vector3();
-
     }
 
     addRArm(mesh){

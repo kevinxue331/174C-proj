@@ -21,7 +21,7 @@ export default class Spider {
         this.lookHelper = null;
     }
 
-    addToScene(scene) {
+    addToScene(scene, initPos) {
         const loader = new GLTFLoader();
         this.scene = scene;
 
@@ -215,6 +215,7 @@ export default class Spider {
                 // console.log("Is tarsus in skeleton:", skinnedMesh.skeleton.bones.includes(tarsus));
 
                 this.ikSolver = new CCDIKSolver(skinnedMesh, ik_chains);
+                this.spiderRoot.position.copy(initPos);
 
                 // scene.add(this.ikSolver.createHelper());
             },
@@ -339,21 +340,21 @@ export default class Spider {
         const lookVector = new THREE.Vector3(0, 0, 1).applyEuler(new THREE.Euler(this.pitch, this.yaw, 0));
         const upVector = new THREE.Vector3(0, 1, 0).applyEuler(new THREE.Euler(this.pitch, this.yaw, 0));
 
-        if(lookVector !== undefined && upVector !== undefined) {
-            const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
-            const upGeometry = new THREE.BufferGeometry().setFromPoints([this.spiderRoot.position, this.spiderRoot.position.clone().add(lookVector.clone().multiplyScalar(10))]);
-            const lookGeometry = new THREE.BufferGeometry().setFromPoints([this.spiderRoot.position, this.spiderRoot.position.clone().add(upVector.clone().multiplyScalar(10))]);
-            const upHelper = new THREE.Line(upGeometry, material);
-            const lookHelper = new THREE.Line(lookGeometry, material);
-
-            if(this.upHelper != null) this.scene.remove(this.upHelper);
-            if(this.lookHelper != null) this.scene.remove(this.lookHelper);
-            this.upHelper = upHelper;
-            this.lookHelper = lookHelper;
-
-            this.scene.add(upHelper);
-            this.scene.add(lookHelper);
-        }
+        // if(lookVector !== undefined && upVector !== undefined) {
+        //     const material = new THREE.LineBasicMaterial({ color: 0xff00ff });
+        //     const upGeometry = new THREE.BufferGeometry().setFromPoints([this.spiderRoot.position, this.spiderRoot.position.clone().add(lookVector.clone().multiplyScalar(10))]);
+        //     const lookGeometry = new THREE.BufferGeometry().setFromPoints([this.spiderRoot.position, this.spiderRoot.position.clone().add(upVector.clone().multiplyScalar(10))]);
+        //     const upHelper = new THREE.Line(upGeometry, material);
+        //     const lookHelper = new THREE.Line(lookGeometry, material);
+        //
+        //     if(this.upHelper != null) this.scene.remove(this.upHelper);
+        //     if(this.lookHelper != null) this.scene.remove(this.lookHelper);
+        //     this.upHelper = upHelper;
+        //     this.lookHelper = lookHelper;
+        //
+        //     this.scene.add(upHelper);
+        //     this.scene.add(lookHelper);
+        // }
 
         // move forward
         const moveStep = new THREE.Vector3(0, 0, speed).applyEuler(new THREE.Euler(this.pitch, this.yaw, 0));
