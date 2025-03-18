@@ -19,7 +19,6 @@ export default class Spider {
 
         this.upHelper = null;
         this.lookHelper = null;
-        window.addEventListener('keydown', this.onKeyDown.bind(this));
     }
 
     addToScene(scene) {
@@ -27,7 +26,7 @@ export default class Spider {
         this.scene = scene;
 
         loader.load(
-            '/static/gltf/spider.gltf',
+            '/static/gltf/spider/spider.gltf',
             (gltf) => {
                 scene.add(gltf.scene);
 
@@ -230,37 +229,6 @@ export default class Spider {
         this.initialized = true;
     }
 
-    onKeyDown(event) {
-        if (event.code === 'KeyJ') {
-            this.left_targets[0].position.add(new THREE.Vector3(-0.1, 0, 0));
-        }
-        if (event.code === 'KeyL') {
-            this.left_targets[0].position.add(new THREE.Vector3(0.1, 0, 0));
-        }
-        if (event.code === 'KeyI') {
-            this.left_targets[0].position.add(new THREE.Vector3(0, 0.1, 0));
-        }
-        if (event.code === 'KeyK') {
-            this.left_targets[0].position.add(new THREE.Vector3(0, -0.1, 0));
-        }
-        if (event.code === 'KeyT') {
-            console.log("reset goal");
-            const goal = new THREE.Vector3(0, 0, 0); // Example goal position
-            this.left_targets[0].position.copy(goal);
-        }
-        if (event.code === 'KeyY') {
-            console.log("update");
-            this.ikSolver.update();
-        }
-        if (event.code === 'KeyX') {
-            const world_pos = new THREE.Vector3(0, 1, 0);
-            this.left_targets[0].getWorldPosition(world_pos);
-            console.log("local: ")
-            console.log(this.left_targets[0].position);
-            console.log("world: ")
-            console.log(world_pos);
-        }
-    }
 
     isLegGrounded(leg, collidables) {
         const threshold = 0.1;

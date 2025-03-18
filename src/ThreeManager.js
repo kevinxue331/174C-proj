@@ -3,6 +3,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import { FlyControls } from 'three/addons/controls/FlyControls.js';
 import Spider from "./spider.js";
+import Snake from "./snake.js";
 import Player from './Player.js';
 import GameManager from './gamemanager.js';
 import City from './city.js';
