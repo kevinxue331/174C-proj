@@ -433,7 +433,6 @@ export default class Spider {
         // else if(this.pitch < 0) this.pitch+=0.01;
 
         if(!this.climbing && !oneLegGrounded) {
-            console.log("fall already")
             if(this.spiderRoot.position.y > 0.3) this.spiderRoot.position.add(new THREE.Vector3(0,-0.3,0));
             if(this.pitch < 0) this.pitch += 0.05;
         }
