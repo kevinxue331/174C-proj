@@ -16,7 +16,17 @@ export default class Player {
         this.walkCycle = 0;
         this.onGround = false;
         this.rArm = null;
-
+        //squish code
+        this.deformation = {
+            active: true,
+            squashStrength: 0.4,  
+            stretchStrength: 1.4,
+            elasticity: 0.15,     
+            maxDeform: 0.5,      
+            defaultScale: new THREE.Vector3(1, 1, 1),
+            currentScale: new THREE.Vector3(1, 1, 1)
+        };
+        
         // collision flags
         this.isColliding = false;
         this.entryVelocity = new THREE.Vector3();
@@ -127,49 +137,58 @@ export default class Player {
     }
     animateLimbs(delta) {
         const { leftArm, rightArm, leftFoot, rightFoot } = this.bodyParts;
-
-        // Debug info
-
-
         // Always increment walk cycle for testing
         this.walkCycle += delta * 5;
 
         // Calculate movement speed (for animation speed)
         const moveSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
-        let isMoving = this.velocity.x + this.velocity.y + this.velocity.z;
         // Test animation to ensure arms move
 
-        if (isMoving > 0.01) {
+        if (moveSpeed > 0.02) {
             if (leftArm) {
-                leftArm.rotation.set(
-                    Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
-                    Math.sin((this.walkCycle + Math.PI)*3) * 0.3,                                // Y rotation (unchanged)
-                    0                                 // Z rotation (unchanged)
-                );
+                if (this.onGround) {
+                    leftArm.rotation.set(
+                        Math.sin(this.walkCycle) * 0.01,  // X rotation (swinging forward/backward)
+                        Math.sin((this.walkCycle + Math.PI) * 3) * 0.3,                                // Y rotation (unchanged)
+                        0                                 // Z rotation (unchanged)
+                    );
+                } else {
+                    leftArm.rotation.set(0, -0.4, 0);
+                }
             }
-
             if (rightArm && rightArm === this.rArm) {
                 // If this is the grappling hook arm, make sure it's being animated
-                rightArm.rotation.set(
-                    Math.sin(this.walkCycle) * 0.01,  // X rotation (opposite of left arm)
-                    Math.sin((this.walkCycle + Math.PI)*3) * 0.3,                                         // Y rotation
-                    0                                          // Z rotation
-                );
-
+                if (this.onGround) {
+                    rightArm.rotation.set(
+                        Math.sin(this.walkCycle) * 0.01,  // X rotation (opposite of left arm)
+                        Math.sin((this.walkCycle + Math.PI) * 3) * 0.3,                                         // Y rotation
+                        0                                          // Z rotation
+                    );
+                } else {
+                    rightArm.rotation.set(0, 0.4, 0);
+                }
             }
             if (leftFoot) {
-                leftFoot.rotation.set(
-                    0,  // X rotation (swinging forward/backward)
-                    Math.sin((this.walkCycle)*3) * 0.3,                                // Y rotation (unchanged)
-                    0                                 // Z rotation (unchanged)
-                );
+                if (this.onGround) {
+                    leftFoot.rotation.set(
+                        0,  // X rotation (swinging forward/backward)
+                        Math.sin((this.walkCycle) * 3) * 0.3,                                // Y rotation (unchanged)
+                        0                                 // Z rotation (unchanged)
+                    );
+                } else {
+                    leftFoot.rotation.set(0, 0.4, 0.07);
+                }
             }
             if (rightFoot) {
-                rightFoot.rotation.set(
-                    0,  // X rotation (opposite of left foot)
-                    Math.sin((this.walkCycle + Math.PI/2)*3) * 0.3,                                // Y rotation (unchanged)
-                    0                                 // Z rotation (unchanged)
-                );
+                if (this.onGround) {
+                    rightFoot.rotation.set(
+                        0,  // X rotation (opposite of left foot)
+                        Math.sin((this.walkCycle + Math.PI / 2) * 3) * 0.3,                                // Y rotation (unchanged)
+                        0                                 // Z rotation (unchanged)
+                    );
+                } else {
+                    rightFoot.rotation.set(0, -0.4, 0.07);
+                }
             }
         }
 
@@ -302,7 +321,63 @@ export default class Player {
 
         return force;
     }
+    applySquashAndStretch(delta) {
+        if (!this.deformation.active) return;
 
+        const accelMagnitude = this.acceleration.length();
+
+        if (accelMagnitude < 0.05) {
+            this.deformation.currentScale.lerp(this.deformation.defaultScale, this.deformation.elasticity);
+            this.kirby.scale.copy(this.deformation.currentScale);
+            return;
+        }
+        const accelDir = this.acceleration.clone().normalize();
+
+        if (Math.abs(accelDir.y) > 0.7) {
+            // vertical deformation
+            if (accelDir.y > 0) {
+                console.log("option 1")
+                const stretchFactor = 1 + (accelMagnitude * this.deformation.stretchStrength);
+                const squeezeFactor = 1 / Math.sqrt(stretchFactor);
+
+                this.deformation.currentScale.set(
+                    squeezeFactor,
+                    Math.min(stretchFactor, 1 + this.deformation.maxDeform),
+                    squeezeFactor
+                );
+            }
+            else {
+                console.log("option 2")
+                const squashFactor = 1 - (accelMagnitude * this.deformation.squashStrength);
+                const bulgeFactor = 1 / Math.sqrt(squashFactor);
+
+                this.deformation.currentScale.set(
+                    Math.min(bulgeFactor, 1 + this.deformation.maxDeform),
+                    Math.max(squashFactor, 1 - this.deformation.maxDeform),
+                    Math.min(bulgeFactor, 1 + this.deformation.maxDeform)
+                );
+            }
+        }
+        // horizontal movement
+        else {
+            const horizontalDir = new THREE.Vector3(accelDir.x, 0, accelDir.z).normalize();
+
+            const localDir = horizontalDir.clone().applyQuaternion(
+                new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -this.kirby.rotation.y, 0))
+            );
+            const stretchFactor = 1 + (accelMagnitude * this.deformation.stretchStrength);
+            const squashFactor = 1 / Math.sqrt(stretchFactor);
+            this.deformation.currentScale.set(
+                squashFactor,
+                Math.min(stretchFactor, 1 + this.deformation.maxDeform)*0.9,
+                squashFactor
+            );
+
+        }
+
+
+        this.kirby.scale.copy(this.deformation.currentScale);
+    }
     deactivateGrapplingHook() {
         this.grapplingHook.isActive = false;
         this.grapplingHook.targetPoint = null;
@@ -430,7 +505,7 @@ export default class Player {
             if(collisionReturn.isColliding > this.isColliding) this.isColliding = collisionReturn.isColliding;
             if(this.isColliding) netForce.add(penaltyForce);
         }
-
+        this.applySquashAndStretch(dt);
 
         const restingThreshold = 0.01;
         const allowWallJump = true;
